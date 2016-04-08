@@ -1,0 +1,105 @@
+252  2016-03-16 15:30:29 wget https://www.openssl.org/source/openssl-1.0.2g.tar.gz
+256  2016-03-16 15:33:13 tar zxvf openssl-1.0.2g.tar.gz 
+260  2016-03-16 15:34:03 cd openssl-1.0.2g
+263  2016-03-16 15:44:56 ./config --prefix=/usr/local/openssl
+264  2016-03-16 15:45:25 rpm -qa|grep openssl
+265  2016-03-16 15:45:46 make 
+266  2016-03-16 15:47:51 make test
+267  2016-03-16 15:48:53 make install
+268  2016-03-16 15:49:51 openssl version
+269  2016-03-16 15:50:01 mv /usr/bin/openssl /root/
+277  2016-03-16 15:51:04 /usr/local/openssl/bin/openssl version
+278  2016-03-16 15:51:21 ldd /usr/local/openssl/bin/openssl
+279  2016-03-16 15:51:46 ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
+###########################必须根据自己路径修改#####################
+[root@localhost CA]# vi /usr/local/openssl/ssl/openssl.cnf 
+dir             = /etc/pki/CA           # Where everything is kept
+####################################################################
+#cd /etc/pki/CA        #CA要给别人颁发证书，首先自己得有一个作为根证书，我们得在一切工作之前修改好CA的配置文件、序列号、索引等等。
+# touch index.txt serial                 #在CA目录下创建两个初始文件
+# echo 01 > serial
+# ( umask 077; openssl genrsa -out private/cakey.pem 2048 )
+Generating RSA private key, 2048 bit long modulus
+.........................................+++
+..................................+++
+e is 65537 (0x10001)
+
+[root@localhost CA]# openssl req -new -x509 -key private/cakey.pem -out cacert.pem -days 3655
+Country Name (2 letter code) [AU]:CN
+State or Province Name (full name) [Some-State]:Beijing
+Locality Name (eg, city) []:Beijing
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:china
+Organizational Unit Name (eg, section) []:china
+Common Name (e.g. server FQDN or YOUR name) []:localhost   123.com
+Email Address []:criss@china.com.cn
+产生客户端证书
+[root@localhost CA]#mkdir /usr/local/nginx/ssl #这里测试的时候CA中心与要申请证书的服务器是同一个。
+[root@localhost ssl]# openssl genrsa -out nginx.key 2048
+Generating RSA private key, 2048 bit long modulus
+..+++
+.........................................+++
+e is 65537 (0x10001)
+
+#########################为nginx生成证书签署请求
+#一定要是你要授予证书的服务器域名或主机名，challenge password不填。
+[root@localhost ssl]# openssl req -new -key nginx.key -out nginx.csr
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:CN
+State or Province Name (full name) [Some-State]:Beijing
+Locality Name (eg, city) []:Beijing
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:china
+Organizational Unit Name (eg, section) []:china
+Common Name (e.g. server FQDN or YOUR name) []:123.com
+Email Address []:criss@china.com.cn
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+
+[root@localhost CA]# openssl ca -in /usr/local/nginx/ssl/nginx.csr -out /usr/local/nginx/ssl/nginx.crt -days 3655
+Using configuration from /usr/local/openssl/ssl/openssl.cnf
+Check that the request matches the signature
+Signature ok
+Certificate Details:
+        Serial Number: 1 (0x1)
+        Validity
+            Not Before: Mar 16 09:15:23 2016 GMT
+            Not After : Mar 19 09:15:23 2026 GMT
+        Subject:
+            countryName               = CN
+            stateOrProvinceName       = Beijing
+            organizationName          = china
+            organizationalUnitName    = china
+            commonName                = 123.com
+            emailAddress              = criss@china.com.cn
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                OpenSSL Generated Certificate
+            X509v3 Subject Key Identifier: 
+                4B:7C:76:D2:41:F0:6B:9E:5B:FB:2B:46:C3:EA:50:0E:E2:2A:F8:B2
+            X509v3 Authority Key Identifier: 
+                keyid:5B:B6:B5:85:2B:D1:FA:5A:4A:A9:AE:D8:12:54:2F:FF:51:64:92:9A
+
+Certificate is to be certified until Mar 19 09:15:23 2026 GMT (3655 days)
+Sign the certificate? [y/n]:y
+
+
+1 out of 1 certificate requests certified, commit? [y/n]y
+Write out database with 1 new entries
+Data Base Updated
+#######生成双向证书###############
+[root@localhost ssl]# openssl pkcs12 -export -clcerts -in nginx.crt -inkey nginx.key -out nginx.p12                  
+Enter Export Password:
+Verifying - Enter Export Password:
+[root@localhost ssl]# ls
+nginx.crt  nginx.csr  nginx.key  nginx.p12
+
