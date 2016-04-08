@@ -1,0 +1,54 @@
+server {
+   listen 80 default_server;   #禁止空主机头
+   server_name _;
+   return 404;
+}
+server {
+  listen       80;
+  server_name  192.168.10.1;
+  index index.html index.htm index.php index.shtml;
+  root  /export/htdocs;
+  access_log  logs/192.168.10.1.log log;
+  error_page   500 502 503 504  /50x.html;
+#########后台禁止后要套用{ location{ }}模式 最后还需要要用location ....############
+location ~ ^/gov/admin/ { 
+allow 192.168.40.0/23;
+allow 192.168.30.0/24;
+deny all;
+location ~ .*\.(php|php5|php4|shtml)?$ {
+root /export/htdocs;
+fastcgi_pass unix:/tmp/php-cgi.sock;
+fastcgi_index index.php;
+include fastcgi.conf;
+}
+}
+#########禁止目录########
+location ~ (/\.svn/|/include/config/|/lib/) {
+deny all;
+}
+#########禁止目录php########
+location ~ /upload/.*\.(php|php4|php5)?$ {
+deny all;
+}
+#########限制一个php#########
+        location ~ /ucapi.php {
+                deny 192.168.200.200;
+                allow 42.120.17.0/24;
+                deny all;
+          location ~ .*\.(php|php5|php4|shtml)?$ {
+          root /export/htdocs;
+          fastcgi_pass unix:/tmp/php-cgi.sock;
+          fastcgi_index index.php;
+          include fastcgi.conf;
+                }
+           }
+location ~ .*\.(php|php5|php4|shtml)?$ {
+root /export/htdocs;
+try_files $uri =404;
+fastcgi_pass unix:/tmp/php-cgi.sock;
+fastcgi_index index.php;
+include fastcgi.conf;
+#include pathinfo.conf;
+}
+}
+}
