@@ -156,5 +156,8 @@ exit $RETVAL
 
 
 #chmod 755 /etc/init.d/shadowsocks
+#chkconfig --add shadowsocks
 #/etc/init.d/shadowsocks restart
 Restarting shadowsocks (via systemctl):  [  OK  ]
+
+
