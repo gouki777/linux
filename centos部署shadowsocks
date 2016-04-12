@@ -10,9 +10,9 @@ https://github.com/shadowsocks/shadowsocks-windows/releases  #for windows client
 选用centos三方源安装
 #cd /etc/yum.repos.d/
 centos 6
-wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-6/librehat-shadowsocks-epel-6.repo librehat-shadowsocks-epel-6.repo
+wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-6/librehat-shadowsocks-epel-6.repo
 centos 7
-wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/librehat-shadowsocks-epel-7.repo librehat-shadowsocks-epel-7.repo
+wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/librehat-shadowsocks-epel-7.repo
 #yum install shadowsocks-libev
 #cd /etc/shadowsocks-libev/
 #vi config.json 
