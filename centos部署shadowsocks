@@ -8,10 +8,11 @@ https://github.com/shadowsocks/shadowsocks-windows/releases  #for windows client
 安装相关组件#
 #yum install -y gcc automake autoconf libtool make curl-devel zlib-devel openssl-devel perl-devel expat-devel gettext-devel
 选用centos三方源安装
+#cd /etc/yum.repos.d/
 centos 6
-wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-6/librehat-shadowsocks-epel-6.repo -O /etc/yum.repos.d/librehat-shadowsocks-epel-6.repo
+wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-6/librehat-shadowsocks-epel-6.repo librehat-shadowsocks-epel-6.repo
 centos 7
-wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/librehat-shadowsocks-epel-7.repo -O /etc/yum.repos.d/librehat-shadowsocks-epel-7.repo
+wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/librehat-shadowsocks-epel-7.repo librehat-shadowsocks-epel-7.repo
 #yum install shadowsocks-libev
 #cd /etc/shadowsocks-libev/
 #vi config.json 
@@ -20,7 +21,7 @@ wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/li
     "server":"47.89.25.1",              #VPS IP
     "server_port":9999,                   #VPS server port
     "local_port":8888,                    #proxy   port
-    "password":"chinadaily",              #passwd
+    "password":"vpspasswd",               #passwd
     "timeout":180,                        #time out
     "method":"aes-256-cfb",               #加密格式
 }
