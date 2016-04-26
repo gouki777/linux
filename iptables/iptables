@@ -1,0 +1,62 @@
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p udp -m udp --sport 53 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+-A INPUT -s 192.168.1.1/32 -p tcp -m tcp --dport 10050 -j ACCEPT
+-A INPUT -s 192.168.30.0/24 -p tcp -m tcp --dport 22 -j ACCEPT
+-A INPUT -s 192.168.11.121 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+-A OUTPUT -o lo -j ACCEPT
+-A OUTPUT -p icmp -j ACCEPT
+-A OUTPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+-A OUTPUT -p udp -m udp --dport 123 -j ACCEPT
+-A OUTPUT -p udp -m udp --dport 53 -j ACCEPT
+-A OUTPUT -d 192.168.30.0/24 -p tcp -m tcp --dport 22 -j ACCEPT
+-A OUTPUT -d 192.168.10.17 -p tcp -m tcp --dport 873 -j ACCEPT
+-A OUTPUT -d 192.168.1.1/32 -j ACCEPT
+-A OUTPUT -d 192.168.11.121/32 -j ACCEPT
+-A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -m state --state NEW -j DROP
+
+
+
+iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A INPUT -p icmp -j ACCEPT 
+iptables -A INPUT -s 124.127.52.0/24 -p tcp -m tcp --dport 80 -j ACCEPT
+iptables -A INPUT -s 192.168.30.0/255.255.255.0 -p tcp -m tcp --dport 22 -j ACCEPT
+iptables -A INPUT -s 124.127.52.251 -p tcp -m multiport --dport 10050,10051 -j ACCEPT
+iptables -A INPUT -p tcp -m multiport --dport 2049,3306,622,80,21,111,9000,873 -j ACCEPT
+iptables -A INPUT -p tcp -m multiport --dports 40000:40080 -j ACCEPT 
+iptables -A OUTPUT -p tcp -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT                 #进来的不受限
+-A INPUT -p icmp -j ACCEPT                                              #icmp过
+-A INPUT -i lo -j ACCEPT                                                #本地回环 过
+-A INPUT -p udp -m udp --sport 53 -j ACCEPT                             #远程 DNS 53端口过
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT        #80过
+-A INPUT -s 124.127.52.251/32 -p tcp -m tcp --dport 10050 -j ACCEPT     #监控过
+-A INPUT -s 124.127.52.38 -j ACCEPT                                     #存储过
+-A INPUT -s 192.168.30.0/24 -p tcp -m tcp --dport 22 -j ACCEPT          #22端口过
+-A INPUT -j REJECT --reject-with icmp-host-prohibited                   #剩余过滤
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited                  
+-A OUTPUT -o lo -p all -j ACCEPT                                        #回环
+-A OUTPUT -o lo -j ACCEPT                                               #回环+1
+-A OUTPUT -p icmp -j ACCEPT                                                
+-A OUTPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+-A OUTPUT -p udp --dport 123 -j ACCEPT                                  #ntp时间同步过
+-A OUTPUT -p udp -m udp --dport 53 -j ACCEPT                            #远程 DNS 53端口过
+-A OUTPUT -d 192.168.30.0/24 -p tcp -m tcp --dport 22 -j ACCEPT         #22过
+-A OUTPUT -d 124.127.52.251 -p tcp -m multiport --dport 10050,10051 -j ACCEPT  #出
+-A OUTPUT -d 124.127.52.38 -j ACCEPT                                           #
+-A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT                
+-A OUTPUT -m state --state NEW -j DROP                                  #拒绝新策略
+
+
+
+######################################
+iptables -A INPUT -p udp -m udp --sport 53 -j ACCEPT  //来自远程DNS服务器53端口的数据包进站通过
+iptables -A INPUT -p udp -m udp --dport 53 -j ACCEPT  //进入本地服务器53端口的数据包进站通过
+iptables -A OUTPUT -p udp -m udp --sport 53 -j ACCEPT  //从本地53端口出站的数据包出站通过
+iptables -A OUTPUT -p udp -m udp --dport 53 -j ACCEPT  //去往远程DNS服务器53端口的数据包出站通过
