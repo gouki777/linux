@@ -1,0 +1,122 @@
+proxy_cache的作用是缓存后端服务器的内容，可能是任何内容，包括静态的和动态。加载都存在A机里。不用跟后端传输。proxy_cache缓存减少了nginx与后端通信的次数，节省了传输时间和后端宽带。nginx配置proxy_cache就是吃缓存和硬盘IO。
+
+A:192.168.10.1  负载分配主机头 
+B:192.168.10.2  后端负载主机  
+C:192.168.10.3  后端负载主机
+
+A配置
+
+user  www www;
+worker_processes auto;
+error_log  /usr/local/nginx/logs/nginx_error.log  crit;
+pid        /usr/local/nginx/logs/nginx.pid;
+#Specifies the value for maximum file descriptors that can be opened by this process
+worker_rlimit_nofile 65535;
+events {
+        use epoll;
+        worker_connections 65535;
+}
+http
+    {
+        include       mime.types;
+        default_type  application/octet-stream;
+
+        server_names_hash_bucket_size 128;
+        client_header_buffer_size 32k;
+        large_client_header_buffers 4 32k;
+        client_max_body_size 50m;
+
+        sendfile   on;
+        tcp_nopush on;
+
+        keepalive_timeout 60;
+
+        tcp_nodelay on;
+###########################
+        open_file_cache max=65535 inactive=30s; #线程支持最大65535 30更新
+        open_file_cache_min_uses 1; #使用一次就被缓存
+        open_file_cache_valid 60s; #60s检测一次，失效缓存
+###########################
+        client_body_buffer_size   512k;   #增加缓冲区代理缓冲客户端请求的最大字节数
+        proxy_connect_timeout     10;     #增加连接后端服务器超时时间
+        proxy_read_timeout        60;     #增加后端服务器响应请求超时时间
+        proxy_send_timeout        10;     #增加后端服务器发送数据超时时间
+        proxy_buffer_size        16k;     #增加代理请求缓存区大小
+        proxy_buffers            4 64k;    #同上
+        proxy_busy_buffers_size   128k;   #增加系统繁忙时可申请的proxy_buffers大小
+        proxy_temp_file_write_size 128k;  #增加proxy缓存临时文件的大小
+
+        add_header X-Cache-CFC "$upstream_cache_status - $upstream_response_time";   #调试hreader头
+        proxy_temp_path   /tmp/proxy_temp;    #temp_path 和cache_path必须放在一个分区下
+        proxy_cache_path /tmp/proxy_cache levels=1:2 keys_zone=cache_one:500m inactive=1h max_size=30g;  #设置缓存区，内存缓存空间500M，硬盘缓存30G，自动清除1小时缓存，zone起名上下对应
+#####################
+        fastcgi_connect_timeout 300;
+        fastcgi_send_timeout 300;
+        fastcgi_read_timeout 300;
+        fastcgi_buffer_size 64k;
+        fastcgi_buffers 4 64k;
+        fastcgi_busy_buffers_size 128k;
+        fastcgi_temp_file_write_size 256k;
+
+        gzip on;
+        gzip_min_length  1k;
+        gzip_buffers     4 16k;
+        gzip_http_version 1.0;            #反向代理是http1.0
+        gzip_comp_level 3;
+        gzip_types     text/plain application/javascript application/x-javascript text/javascript text/css application/xml application/xml+rss;
+        gzip_vary on;
+        gzip_disable   "MSIE [1-6]\.";
+
+############收集日志http_x_real_ip=http_x_forwarded_for 后端挺有用的############
+      log_format  access1  '$http_x_real_ip - $remote_user [$time_local] "$request" '
+                         '$status $body_bytes_sent "$http_referer" '
+                         '"$http_user_agent" "$http_x_forwarded_for" "$remote_addr"';
+###############反向代理 和proxy_cache配置#################
+upstream test.123.com{
+        server 192.168.10.2:80   weight=1 max_fails=2 fail_timeout=30s;
+        server 192.168.10.3:80   weight=1 max_fails=2 fail_timeout=30s;
+}
+server {
+        listen 80;
+        server_name  test.123.com;
+        location / {
+                proxy_pass        http://test.123.com;
+                proxy_set_header   Host  $host;
+                proxy_set_header   X-Real-IP        $remote_addr;
+                proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+                proxy_cache_key $host$uri$is_args$args; #增加设置web缓存的key值，nginx根据key值md5哈希存储缓存
+                proxy_cache_valid 200 304 1h;         #200和304缓存1小时
+                #如果后端的服务器返回502、504、执行超时等错误，自动将请求转发到upstream负载均衡池中的另一台服务器，实现故障转移
+                proxy_next_upstream error timeout invalid_header http_500 http_503 http_404;
+                proxy_cache cache_one;    #proxy自定义名字
+                expires 1d;                           #客户IE缓存
+        }
+        location ~ .*\.(php|jsp|cgi|asp|aspx|flv|swf|xml)?$ #列出的扩展名文件不缓存
+              {
+                proxy_pass        http://test.123.com;
+                proxy_set_header   Host  $host;
+                proxy_set_header   X-Real-IP        $remote_addr;
+                proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+              }
+
+     }
+
+｝
+
+B和C是正常的配置如下，可忽略。。 完毕
+
+server {
+                listen       80;
+                server_name  test.123.com;
+                access_log logs/test.log access1;
+                index index.jsp index.php index.html;
+                root /home/www;
+            }………………………………………………………………
+
+经过内网测试性能不错 并发可以接近nginx_proxy_cache配置
+
+#webbench -c 5000 -t 60 "http://test.123.com"
+5000 clients, running 60 sec.
+
+Speed=98737 pages/min, 20858100 bytes/sec.
+Requests: 95864 susceed, 2873 failed.

@@ -1,0 +1,118 @@
+nginx的fastcgi_cache和proxy_cache区别
+nginx不仅有个大家很熟悉的缓存代理后端内容的proxy_cache，还有个被很多人忽视的fastcgi_cache。
+proxy_cache的作用是缓存后端服务器的内容，可能是任何内容，包括静态的和动态。
+fastcgi_cache的作用是缓存fastcgi生成的内容，很多情况是php生成的动态的内容。
+proxy_cache缓存减少了nginx与后端通信的次数，节省了传输时间和后端宽带。
+fastcgi_cache缓存减少了nginx与php的通信的次数，更减轻了php和数据库(mysql)的压力，这比用memcached之类的缓存要轻松得多。
+proxy_cache和fastcgi_cache可以在一个应用中同时使用，如果都用得着的话。
+
+上配置文件
+http {         
+
+        sendfile on;
+        tcp_nopush     on;
+        tcp_nodelay on;
+#####################################
+        add_header X-Cache-CFC "$upstream_cache_status - $upstream_response_time"; #调试标记
+        fastcgi_temp_path /dev/shm/nginx_tmp;                               #生成fastcgi_cache临时文件目录
+        #cache设置
+        fastcgi_cache_path   /dev/shm/nginx_cache  levels=1:2 keys_zone=cfcache:100m inactive=1h max_size=1g;
+################################################
+open_file_cache max=65535 inactive=30s; #线程支持最大65535 30更新
+open_file_cache_min_uses 1; #使用一次就被缓存
+open_file_cache_valid 60s; #60s检测一次，失效缓存
+
+###############那些不缓存 比如后台..#####################
+fastcgi_cache_bypass $skip_cache;
+fastcgi_no_cache $skip_cache;
+
+####################如下也可以在location下详细配置############
+
+/LEVELS 目录分层 keys_zone 起名！和下面cfcache一致，占用内存大小，inactive缓存时间1小时，max_size最大占用多大
+        fastcgi_cache_key "$request_method://$host$request_uri";
+        fastcgi_cache_methods GET HEAD;
+        fastcgi_cache   cfcache;
+        fastcgi_cache_valid 200 302 301  1h;     #缓存http状态200 302 301 1小时
+        fastcgi_cache_valid 404 403 5h;     #缓存http状态200 302 301 1小时
+        fastcgi_cache_valid any 5m;         #其他应答代码缓存5分钟。       
+        fastcgi_cache_min_uses  1;
+        fastcgi_cache_use_stale error  timeout invalid_header http_500;
+        fastcgi_ignore_client_abort on;
+
+ 
+
+        fastcgi_connect_timeout 300;
+        fastcgi_send_timeout 300;
+        fastcgi_read_timeout 300;
+        fastcgi_buffer_size 64k;
+        fastcgi_buffers 4 64k;
+        fastcgi_busy_buffers_size 128k;
+        fastcgi_temp_file_write_size 128k;
+
+
+ 
+
+        gzip on;
+
+ server {  下增加规则
+
+#fastcgi cache 规则开始
+        set $skip_cache 0;
+        # 不缓存POST操作
+        if ($request_method = POST) {
+            set $skip_cache 1;
+        }
+        #动态查询不缓存
+        if ($query_string != "") {
+            set $skip_cache 1;
+        }
+        #后台等特定页面不缓存（其他需求请自行添加即可）
+        if ($request_uri ~* "/e/admin/") {
+            set $skip_cache 1;
+        }
+
+ 
+
+调试命中测试
+
+MISS 未命中 
+EXPIRED – expired, request was passed to backend Cache已过期 
+UPDATING – expired, stale response was used due to proxy/fastcgi_cache_use_stale updating Cache已过期，(被其他nginx子进程)更新中 
+STALE – expired, stale response was used due to proxy/fastcgi_cache_use_stale Cache已过期，响应数据不合法，被污染 
+HIT 命中cache 
+$ curl -I http://123123.com/
+HTTP/1.1 200 OK
+Content-Type: text/html
+Powered-By-ChinaCache: HIT from 010125c3gF.8              #HIT 命中
+CC_CACHE: TCP_HIT                                                                 #HIT 命中
+
+关于缓存清理问题
+
+
+这样就可以了，基本上可以work，但还没完，如何手动清除缓存?有个Nginx的第三方扩展可帮你做到：https://github.com/FRiCKLE/ngx_cache_purge/，如果对大多数第三方扩展无爱，写个清除的脚本也非常简单，以PHP为例：
+
+1.重启php，删除缓存目录（测试用）//2.nginx_cache_purge插件//3.手动脚本如下
+
+缓存脚本参考文：http://www.php100.com/html/webkaifa/PHP/PHPyingyong/2011/1118/9312.html
+
+后台伪静态缓存参考：http://www.starrydns.com/wordpress-fastcgi-cache
+
+缓存支持伪静态参考：https://zhangge.net/5042.html
+
+需要注意的重点几点：http://www.cnxct.com/several-reminder-in-nginx-fastcgi_cache-and-php-session_cache_limiter/
+
+测试效果
+
+[root@~]# webbench -c 2500 -t 60 http://123.com/    机器有点破。优化前
+2500 clients, running 60 sec.
+
+Speed=56873 pages/min, 6085658 bytes/sec.
+Requests: 35899 susceed, 20974 failed.
+
+ 
+
+[root@ ~]# webbench -c 2500 -t 60 http://123.com     优化后~。~
+2500 clients, running 60 sec.
+
+Speed=47285 pages/min, 7904410 bytes/sec.
+Requests: 47144 susceed, 141 failed.
