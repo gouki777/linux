@@ -1,0 +1,16 @@
+#!/bin/bash
+if [ $# != 1 ] ; then    #切记if空格[空格 参数空格 ；空格 很多问题
+echo "Usage: `basename $0` [start|stop|help]" >&2
+exit 1
+fi
+name1=$1         #name1 case in
+case $name1 in
+start)echo "starting..`basename $0`"
+;;
+stop)echo "stopping..`basename $0`"
+;;
+help)echo "this is no..."
+;;
+*)echo "Usage:`basename $0`[start|stop|help]"
+;;
+Esac

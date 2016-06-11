@@ -1,0 +1,11 @@
+#!/bin/bash
+LOGFILE1="/tmp/1.log"
+##########$time##################
+a=`stat -c %Y "$LOGFILE"`     #文件时间戳
+b=`date +%s`                  #当前时间
+if [ $[ $b - $a ] -gt 900 ] ; then    #15分钟不更新    
+ echo 1
+else
+ echo "[`date +%y%m%d/%H:%M`]reboot 123" >>${LOGFILE1}
+fi
+exit 0

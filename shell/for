@@ -1,0 +1,8 @@
+ for I in {1..10}; do  #创建未来10天日期文件夹
+ mkdir $(date -d "$I days" +%Y%m%d);
+done
+
+ for count in `seq 50`
+do
+ touch linx-$count
+done
