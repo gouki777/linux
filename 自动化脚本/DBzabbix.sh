@@ -4,10 +4,10 @@
 #sunny make
 ###############
 DBdate=` date +%Y%m%d `
-dbdate1=`date -d $(date -d "-10 day" +%Y%m%d) +%s`
-dbdate2=`date -d $(date -d "-10 day" +%Y%m%d) +%s`
+dbdate1=`date -d $(date -d "-30 day" +%Y%m%d) +%s`
+dbdate2=`date -d $(date -d "-30 day" +%Y%m%d) +%s`
 User=zabbix
-Passwd="cndy.org"
+Passwd="123456"
 /usr/bin/mysqldump zabbix > /shell/${DBdate}zabbix.sql -u$User -p$Passwd   #备份DB
 sleep 2
 ##############优化清理历史数据##########
