@@ -1,0 +1,34 @@
+#!/bin/bash
+#################
+#多线程并发bash #
+#################
+export PATH=$PATH:/bin:/usr/bin:/usr/local/bin
+exec 3>>/tmp/del.log
+echo "====================================================" >&3
+echo -e "\n[`date +%Y/%m/%d\ %H:%M:%S`] del $RUNUSER PID:$$" >&3
+
+tmpfile=$$.fifo  #创建管道名称
+mkfifo $tmpfile       #创建管道
+exec 4<>$tmpfile      #创建文件标示4，以读写方式操作管道$tmpfile
+rm $tmpfile           #将创建的通道文件清楚
+thred=20    #指定并发数线程+1
+#####变量###########
+seq='001a 001b 001c 001d'
+#####################
+#为并发线程创建相应的个数占位
+for (( i=1; i<=$thred;i++)); do
+   echo "";
+done >&4
+for I in $seq ; do
+ read -u4
+ {
+ cat $I |xargs -i -t rm -rf {}
+# rsync -vzrtopguR --ignore-errors --password-file=/shell/123.pwd --progress `cat /shell/"$I"` cdi@192.168.10.1::backup
+  echo -e "[`date +%Y/%m/%d\ %H:%M:%S`] del $I is OK!" >&3
+sleep 2;
+echo >&4
+}&
+done
+wait
+exec 4>&-
+exit 0
