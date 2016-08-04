@@ -1,22 +1,22 @@
 #!/bin/bash
 #############################
-#¶àÏß³Ì 2016-08-02 sunny    #
+#å¤šçº¿ç¨‹ 2016-08-02 sunyufeng#
 #############################
 export PATH=$PATH:/bin:/usr/bin:/usr/local/bin
 exec 3>>/tmp/ws.log
 echo "====================================================" >&3
 echo -e "\n[`date +%Y/%m/%d\ %H:%M:%S`] Download wslog is Begin $RUNUSER PID:$$" >&3
 
-tmpfile=$$.fifo  #´´½¨¹ÜµÀÃû³Æ
-mkfifo $tmpfile       #´´½¨¹ÜµÀ
-exec 4<>$tmpfile      #´´½¨ÎÄ¼ş±êÊ¾4£¬ÒÔ¶ÁĞ´·½Ê½²Ù×÷¹ÜµÀ$tmpfile
-rm $tmpfile           #½«´´½¨µÄÍ¨µÀÎÄ¼şÇå³ş
-thred=3               #Ïß³Ì
+tmpfile=$$.fifo  #åˆ›å»ºç®¡é“åç§°
+mkfifo $tmpfile       #åˆ›å»ºç®¡é“
+exec 4<>$tmpfile      #åˆ›å»ºæ–‡ä»¶æ ‡ç¤º4ï¼Œä»¥è¯»å†™æ–¹å¼æ“ä½œç®¡é“$tmpfile
+rm $tmpfile           #å°†åˆ›å»ºçš„é€šé“æ–‡ä»¶æ¸…æ¥š
+thred=4               #çº¿ç¨‹
 ###################################
 seq='aaa.com bbb.com ccc.com'
 logfile="/data/logs/wslog/"
 username=name1
-password=passwd123456
+password=passwdWS1234
 date8=`date "+%Y%m%d" -d "-1 day"`
 date2=`date "+%Y" -d "-1 day"`
 date3=`date "+%m" -d "-1 day"`
@@ -24,25 +24,37 @@ date4=`date "+%d" -d "-1 day"`
 date5=`printf "%02d\n" $date3`
 date6=`printf "%02d\n" $date4`
 date7="$date2"-"$date3"-"$date4"
-#####Îª²¢·¢Ïß³Ì´´½¨ÏàÓ¦µÄ¸öÊıÕ¼Î»##########
+#####ä¸ºå¹¶å‘çº¿ç¨‹åˆ›å»ºç›¸åº”çš„ä¸ªæ•°å ä½##########
 for (( i=1; i<=$thred;i++)); do
    echo "";
 done >&4
-###########sleep15 WSapi»ñÈ¡¼ä¸ôÎÊÌâÆµ·±ÈİÒ×»ñÈ¡²»µ½url############
+###########sleep15 WSapiè·å–é—´éš”é—®é¢˜é¢‘ç¹å®¹æ˜“è·å–ä¸åˆ°url############
 for I in $seq ; do
-sleep 15;
+sleep 5;
  read -u4
-sleep 15;
+sleep 5;
 {
 mkdir -p "$logfile""$I"
 logurl=`/bin/bash /shell/wslog_query_client.sh "http://dx.wslog.chinanetcenter.com/logQuery/access" "$username" "$password" "$date7-0000" "$date7-2359" "$I" 2>/dev/null|awk '{print $12}'|cut -d '"' -f2|cut -d '"' -f1`
-sleep 15;
+sleep 1;
+##############å¾ªç¯10æ¬¡è·å–å€¼#########
+ for ((i=1; i<=10; i++)); do
+  if [ -z "$logurl" ] ; then
+     sleep 5;
+     logurl=`/bin/bash /shell/wslog_query_client.sh "http://dx.wslog.chinanetcenter.com/logQuery/access" "$username" "$password" "$date7-0000" "$date7-2359" "$I" 2>/dev/null|awk '{print $12}'|cut -d '"' -f2|cut -d '"' -f1`
+    else
+########è·³å‡ºforå¾ªç¯######continueè·³åˆ°ä¸‹æ¬¡å¾ªç¯#########
+      break;
+  fi
+ done
+echo -e "[`date +%Y/%m/%d\ %H:%M:%S`] Loading... $I" >&3
 wget -c -q $logurl -O  "$logfile""$I"/"$I"."$date8".gz
+#############
 echo >&4
 }&
 done
 wait
-###################´óÓÚ1GÇĞ·ÖÈÕÖ¾###########
+#############åˆ‡æ—¥å¿—è„šæœ¬######
 for I in $seq ; do
 sleep 2;
  read -u4
@@ -50,21 +62,22 @@ sleep 2;
 biglog=`du -k "$logfile""$I"/"$I"."$date8".gz|awk '{print $1}'`
 if [ $biglog -gt 1000000 ] ; then
     cd "$logfile""$I"/
-    zcat "$logfile""$I"/"$I"."$date8".gz |split -b 19000m -d - "$logfile""$I"/"$I"."$date8"_;
+    zcat "$logfile""$I"/"$I"."$date8".gz |split -b 18500m -d - "$logfile""$I"/"$I"."$date8"_;
     sleep 1
     gzip "$logfile""$I"/"$I"."$date8"_*;
+    rm -rf "$logfile""$I"/"$I"."$date8".gz
  fi
 echo >&4
 }&
 done
 wait
 exec 4>&-
-############ÇĞ·Öºó,É¾³ı×Ü°ü£¬ÖØĞÂ´ò°ügz########################
-for I in $seq ; do
-rm -rf "$logfile""$I"/"$I"."$date8".gz
-sleep 1
-done
+#########################æ¸…ç†åŸæ—¥å¿—å’Œ30å¤©å‰çš„################################
+#for I in $seq ; do
+#rm -rf "$logfile""$I"/"$I"."$date8".gz
+#sleep 1
+#done
 #delete 30 days ago log files
-find "$logfile" -mtime +$save_days -exec rm -rf {} \;
+find /data/logs/wslog -mtime +30 -exec rm -rf {} \;
 echo -e "\n[`date +%Y/%m/%d\ %H:%M:%S`] Download wslog is END $RUNUSER PID:$$" >&3
 exit 0
