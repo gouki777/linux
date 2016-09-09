@@ -1,0 +1,65 @@
+#!/bin/bash
+# chkconfig: 2345 55 25
+# run: 'chkconfig --add rails'
+#################################################
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: rails server status
+#################################################
+export PATH=$PATH:/bin:/usr/bin:/usr/local/bin:/usr/local/mysql/bin
+NAME=rails
+SCRIPTNAME=/etc/init.d/$NAME
+if [ $# != 1 ] ; then
+echo "Usage: `basename $0` [start|stop|status|restart]" >&2
+exit 1
+fi
+case $1 in
+start)
+  echo -n "starting $NAME..."
+  if netstat -lntp|grep -q puma; then
+    echo "$NAME is already running"
+  exit 1
+  fi
+  cd /export/blog
+  rails server >/dev/null &
+  if [ "$?" != 0 ] ; then
+    echo " failed"
+    exit 1
+  else
+    echo " done"
+  fi
+;;
+stop)
+echo -n "stopping `basename $0`..."
+  if ! netstat -lntp|grep -q puma; then
+    echo "$NAME is not running."
+  exit 1
+  fi   
+ps -efl|grep -v grep|grep puma|awk '{print $4}'|xargs -i kill -9 {}
+  if [ "$?" != 0 ] ; then
+    echo " failed. Use kill"
+    exit 1
+  else
+    echo " done"
+  fi
+;;
+status)
+  if netstat -tnpl | grep -q puma; then
+    PID=`ps -efl|grep -v grep|grep puma|awk '{print $4}'`
+    echo "$NAME (pid $PID) is running..."
+  else
+    echo "$NAME is stopped"
+    exit 0
+  fi
+;;
+restart)
+  echo -n "restart..$NAME"
+  SCRIPTNAME stop
+  sleep 1
+  SCRIPTNAME start
+;;
+*)
+echo "Usage:`basename $0`[start|stop|status|restart]" >&2
+;;
+esac
+exit 0
