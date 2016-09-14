@@ -6,7 +6,7 @@
 # Default-Stop:      0 1 6
 # Short-Description: rails server status
 #################################################
-export PATH=$PATH:/bin:/usr/bin:/usr/local/bin:/usr/local/mysql/bin
+export PATH=$PATH:/bin:/usr/bin:/usr/local/bin
 NAME=rails
 SCRIPTNAME=/etc/init.d/$NAME
 if [ $# != 1 ] ; then
