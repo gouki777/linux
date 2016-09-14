@@ -53,10 +53,10 @@ status)
   fi
 ;;
 restart)
-  echo -n "restart..$NAME"
-  SCRIPTNAME stop
+  echo -e "restart..$NAME\n"
+  $SCRIPTNAME stop
   sleep 1
-  SCRIPTNAME start
+  $SCRIPTNAME start
 ;;
 *)
 echo "Usage:`basename $0`[start|stop|status|restart]" >&2
