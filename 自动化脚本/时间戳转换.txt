@@ -1,0 +1,7 @@
+系统时间转化为时间戳 转换成16进制
+echo `date +%s`|awk '{printf "%x\n",$0}'
+时间戳 转换成16进制
+echo 1476113716 |awk '{printf "%x\n",$0}'
+日志时间戳转化
+cat XXX.log |awk '{print $1,strftime("%Y-%m-%d:%H:%M:%S",$2),$3}'
+
