@@ -1,0 +1,284 @@
+/etc/keepalived/keepalived.conf:
+! Configuration File for keepalived
+
+global_defs {
+   notification_email {
+    coldnight@linuxzen.com               # 发生故障时发送的邮箱
+   }
+   notification_email_from linuxzen@linuxzen.com      # 使用哪个邮箱发送
+   smtp_server linuxzen.com                        # 发件服务器
+   smtp_connect_timeout 30
+   router_id LVS_DEVEL
+}
+
+vrrp_instance VI_1 {
+    state MASTER             # 标示为主lvs
+    interface eth0           # HA检测端口
+    virtual_router_id 51     # 主备的virtual_router_id 必须相同
+    priority 100             # 优先级,备lvs要比主lvs稍小
+    advert_int 1             # VRRP Multicast 广播周期秒数
+    authentication {         # 定义认证
+        auth_type PASS       # 认证方式为口令认证
+        auth_pass 1111       # 定义口令
+    }
+    virtual_ipaddress {      # 定义vip
+        192.168.3.100        # 多个vip可换行添加
+    }
+}
+lb_algo rr|wrr|lc|wlc|lblc|sh|dh
+    lb_kind NAT|DR|TUN
+virtual_server 192.168.3.100 80 {
+    delay_loop 6       # 每隔6秒查看realserver状态
+    lb_algo  rr                  # 调度算法为加权最小连接数  rr|wrr|lc|wlc|lblc|sh|dh
+    lb_kind DR                   # lvs工作模式为DR(直接路由)模式  NAT|DR|TUN
+    nat_mask 255.255.255.0
+    persistence_timeout 50  # 同一IP 的连接50秒内被分配到同一台realserver(测试时建议改为0)
+    protocol TCP            # 用TCP监测realserver的状态
+
+    real_server 192.168.3.3 80 {       # 定义realserver
+        weight 3                       # 定义权重
+        TCP_CHECK {  # 注意TCP_CHECK和{之间的空格,如果没有的话只会添加第一个realserver
+            connect_timeout 3          # 三秒无响应超时
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 80
+        }
+    }
+    real_server 192.168.3.102 80 {
+        weight 3
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 80
+        }
+    }
+}
+
+
+vrrp_instance VI_1 ：不在这里解释了
+virtual_server 192.168.1.220 8080   ： 这里配置虚拟服务器 （192.168.1.220 为虚拟IP， 监听8080端口）客户端就访问这个地址。
+delay_loop ：健康检查时间间隔，单位是秒。
+lb_algo ：负载均衡调度算法，互联网应用常使用 wlc 或 rr。
+lb_kind ：负载均衡转发规则。一般包括 DR,NAT,TUN3 种，在我的方案中，都使用DR 的方式。
+persistence_timeout. ：会话保持时间，单位是秒。这个会话是网络7层传输协议中的（第三层）会话。比如我们把它设置为60，那么客户端60秒内访问LVS虚拟服务器的请求都会被转到到同1个后台服务器节点。如果设置为0，那么每次请求都会根据配置的调度情况进行分发。
+转发协议 protocol. 一般有 tcp 和 udp 两种。实话说，我还没尝试过 udp 协议类的转发。
+
+LVS负载均衡的调度算法(静态)
+(1)轮循调度(Round Robin)(rr)(最笨的调度算法)
+调度器通过“轮循”调度算法将外部请求按顺序轮流分配到集群中的Real Server上，均等每一台Server，而不管Server上实际的连接和系统负载。
+(2)加权轮循(Weighted Round Robin)(wrr)
+调度器通过”加权轮循”调度算法根据真实服务器的不同处理能力来调访问请求。如此保证处理能力强的服务器能处理更多的访问流量。调度器可以自动问询真实服务器的负载情况，并动态地调整其权值。
+(3)目标地址散列(Destination Hashing)(DH)(有缓存,目标不变,则不变)
+它的调度算法根据请求的目标IP地址,作为散列(Hash Key)从静态分配的散列表找出对应的服务器,若该服务器是可用的且未超载,则将请求发送到该服务器,否则返回空。
+(4)源地址散列(Source Hashing)(SH) (有缓存,源不变,则不变)
+是根据请求的源IP地址,作为散列键(Hash key)从静态分配的散列表找出对应的服务器,若该 服务器是可用的且未超载,将请求发送到该服务器,否则返回空。
+9. LVS负载均衡的调度算法(动态)
+(5)最少链接(Least Connections)(LC)
+调度器通过”最少连接”调度算法动态地将网络请求调度到已建立的链接数最少的服务器上。若集群系统的真实服务器具有相近的系统性能，采用“最少连接”调度算法可以较好地均衡负载。
+公式：LC = 活动连接数*256 + 非活动连接数
+例如：
+ 
+(6)加权最少链接(Weighted Least Connections)(WLC) 注：目前最优秀的调度算法！
+适应:在集群系统中的服务器性能差异较大的情况下,调度器采用”加权最少链接”调算法优化负载均衡性能。具有较高权值的服务器将承受较大比例的活动连接负载。调度器可以自动问询真实服务器的负载情况，并动态地调整其权值。
+例如：在上表加入Real Server1权值 为3，Real Server2权值为1时，则
+公式：WLC = （活动连接数*256 + 非活动连接数）/权重
+(7)最短的期望的延时(Shortest Expected Delay)(SED)
+sed只是在WLC上做了些微调而已。只计算活动连接数！
+公式：LC = (活动连接数+1)*256 ÷权重
+(8)最少队列调度(Never Queue Scheduling)(NQS)
+无需队列。若Real Server的连接数=0,就直接分配过去,不需要再进行sed运算。只计算活动连接数！
+(9)基于局部性的最少连接(Locality-Based Least Connections)(LBLC)
+它的调度算法针对目标IP地址的负载均衡,目前主要用于Cache集群系统。该算法根据请求的目标IP地址找出该目标IP地址最近使用的服务器，若该服务器是可用的且没有超载，将请求发送到该服务器；若服务器不存在，或者该服务器超载且有服务器处于一半的工作负载，则用“最少连接”的原则选出一个可用的服务器，将请求发送到该服务器。(HD动态算法)
+(10)带复制的基于局部最少链接(Locality-Based Leat Connections Witch Replication)(LBLCR)
+此调算法也是针对目标IP地址的负载均衡,目前主要用于Cache集群系统。它与LBLC算法的不同之处是它要维护从一个目标IP地址到一组服务器的映射，而LBLC算法维护从一个目标IP地址到一台服务器的映射。该算法根据请求的目标IP地址找出该目标IP地址对应的服务器组，按“最小连接”原则从服务器组中选出一台服务器，若服务器没有超载，将请求发送到该服务器，若服务器超载，则按“按最少连接”原则从这个集群中选出一台服务器，将该服务器加入到服务器组中，将请求发送到该服务器。同时，当该服务器组有一段时间没有被修改，将最忙的服务器从服务器组中删除，以降低复制的程度。
+
+
+Keepalived健康检查方式配置
+HTTP_GET|SSL_GET
+HTTP_GET | SSL_GET
+{
+url {
+path /# HTTP/SSL 检查的url 可以是多个
+digest <STRING> # HTTP/SSL 检查后的摘要信息 用工具genhash生成
+status_code 200# HTTP/SSL 检查返回的状态码
+}
+connect_port 80 # 连接端口
+bindto <IPADD>
+connect_timeout 3 # 连接超时时间
+nb_get_retry 3 # 重连次数
+delay_before_retry 2 #连接间隔时间
+} 
+# END OF HTTP_GET|SSL_GET
+TCP健康检查方式
+TCP_CHECK {
+connect_timeout 5 #连接超时时间
+nb_get_retry 3#重连次数
+delay_before_retry 3 #重连间隔时间
+connect_port 80 #健康检查的端口
+} # TCP_CHECK
+SMTP健康检查方式
+SMTP_CHECK {
+host {
+connect_ip <IP ADDRESS>
+connect_port <PORT> # 默认检查端口25
+}
+connect_timeout <INTEGER>
+retry <INTEGER>
+delay_before_retry <INTEGER>
+helo_name <STRING>|<QUOTED-STRING> # "请求命令参数，可选
+} #SMTP_CHECK
+MISC
+MISC_CHECK {
+misc_path <STRING>|<QUOTED-STRING># 外部程序或者脚本路径
+misc_timeout <INT># 执行脚本的超时时间
+misc_dynamic#如果设置了misc_dynamic,healthchecker程序的退出状态码会用来动态调整服务器的权重（weight）.
+#返回0：健康检查OK，权重不被修改
+#返回1：健康检查失败，权重设为0
+#返回2-255：健康检查OK，权重设置为：退出状态码-2，比如返回255，那么weight=255-2=253
+}
+工具genhash使用
+[root@localhost bin]# ./genhash -h
+genhash v1.0.0 (18/11, 2002)
+Usage:
+./genhash -s server-address -p port -u url
+./genhash -S -s server-address -p port -u url
+./genhash -h
+./genhash -r
+Commands:
+Either long or short options are allowed.
+./genhash --use-ssl-SUse SSL connection to remote server.
+./genhash --server-sUse the specified remote server address.
+./genhash --port-pUse the specified remote server port.
+./genhash --url-uUse the specified remote server url.
+./genhash --use-virtualhost -VUse the specified virtualhost in GET query.
+./genhash --verbose-vUse verbose mode output.
+./genhash --help-hDisplay this short inlined help screen.
+./genhash --release-rDisplay the release number
+工具产生结果如下：
+[root@localhost bin]# ./genhash -s10.7.11.12 -p 80 -u http://10.7.11
+.40/index.html
+MD5SUM = b7bd8391367e4cf9e4e85263ce313ae8
+配置如下：
+real_server 10.7.11.12 80 {
+weight 1
+TCP_CHECK {
+connect_timeout 5
+nb_get_retry 3
+delay_before_retry 3
+connect_port 80
+}
+HTTP_GET {
+url { 
+path /
+digest b7bd8391367e4cf9e4e85263ce313ae8
+status_code 200
+}
+#url { 
+#path /mrtg/
+#digest 9b3a0c85a887a256d6939da88aabd8cd
+#}
+connect_timeout 3
+nb_get_retry 3
+delay_before_retry 3
+}
+}
+TCP健康检查方式配置例子：
+real_server 192.168.191.130 80 {
+weight 3
+inhibit_on_failure #在服务器健康检查失效时，将其设为0
+TCP_CHECK {
+connect_timeout 5 #连接超时时间
+nb_get_retry 3#重连次数
+delay_before_retry 3 #重连间隔时间
+connect_port 80 #健康检查的端口
+}
+}
+SSL健康检查方式同HTTP，例子如下：
+virtual_server 192.168.200.100 443 {
+delay_loop 6
+lb_algo rr 
+lb_kind NAT
+persistence_timeout 50
+protocol TCP
+real_server 192.168.201.100 443 {
+weight 1
+SSL_GET {
+url { 
+path /
+digest ff20ad2481f97b1754ef3e12ecd3a9cc
+}
+url { 
+path /mrtg/
+digest 9b3a0c85a887a256d6939da88aabd8cd
+}
+connect_timeout 3
+nb_get_retry 3
+delay_before_retry 3
+}
+}
+}
+SNMP方式例子：
+real_server 172.16.1.12 25 {
+weight 1
+SMTP_CHECK {
+connect_timeout 10
+retry 2
+delay_before_retry 5
+helo_name "foo.bar.com"
+host {
+connect_ip 172.16.1.12
+connect_port 25
+bindto 172.16.1.2
+}
+host {
+connect_ip192.168.155.11
+connect_port 25
+bindto 192.168.155.2
+}
+host {
+connect_ip64.233.167.100
+connect_port 587
+}
+}
+}
+MISC方式脚本带参数例子：
+real_server 192.168.200.6 1358 {
+weight 1
+MISC_CHECK {
+misc_path "/usr/local/bin/script.sh arg1 arg2"
+}
+}
+MISC方式脚本不带参数例子：
+real_server 192.168.200.6 1358 {
+weight 1
+MISC_CHECK {
+misc_path /usr/local/bin/script.sh
+!misc_dynamic
+}
+}
+
+
+
+
+global_defs
+notification_email ： keepalived在发生诸如切换操作时需要发送email通知地址，后面的 smtp_server 相比也都知道是邮件服务器地址。也可以通过其它方式报警，毕竟邮件不是实时通知的。
+router_id ： 机器标识，通常可设为hostname。故障发生时，邮件通知会用到
+vrrp_instance
+state ： 指定instance(Initial)的初始状态，就是说在配置好后，这台服务器的初始状态就是这里指定的，但这里指定的不算，还是得要通过竞选通过优先级来确定。如果这里设置为MASTER，但如若他的优先级不及另外一台，那么这台在发送通告时，会发送自己的优先级，另外一台发现优先级不如自己的高，那么他会就回抢占为MASTER
+interface ： 实例绑定的网卡，因为在配置虚拟IP的时候必须是在已有的网卡上添加的
+mcast_src_ip ： 发送多播数据包时的源IP地址，这里注意了，这里实际上就是在那个地址上发送VRRP通告，这个非常重要，一定要选择稳定的网卡端口来发送，这里相当于heartbeat的心跳端口，如果没有设置那么就用默认的绑定的网卡的IP，也就是interface指定的IP地址
+virtual_router_id ： 这里设置VRID，这里非常重要，相同的VRID为一个组，他将决定多播的MAC地址
+priority ： 设置本节点的优先级，优先级高的为master
+advert_int ： 检查间隔，默认为1秒。这就是VRRP的定时器，MASTER每隔这样一个时间间隔，就会发送一个advertisement报文以通知组内其他路由器自己工作正常
+authentication ： 定义认证方式和密码，主从必须一样
+virtual_ipaddress ： 这里设置的就是VIP，也就是虚拟IP地址，他随着state的变化而增加删除，当state为master的时候就添加，当state为backup的时候删除，这里主要是有优先级来决定的，和state设置的值没有多大关系，这里可以设置多个IP地址
+track_script ： 引用VRRP脚本，即在 vrrp_script 部分指定的名字。定期运行它们来改变优先级，并最终引发主备切换。
+vrrp_script
+告诉 keepalived 在什么情况下切换，所以尤为重要。可以有多个 vrrp_script
+script ： 自己写的检测脚本。也可以是一行命令如killall -0 nginx
+interval 2 ： 每2s检测一次
+weight -5 ： 检测失败（脚本返回非0）则优先级 -5
+fall 2 ： 检测连续 2 次失败才算确定是真失败。会用weight减少优先级（1-255之间）
+rise 1 ： 检测 1 次成功就算成功。但不修改优先级
+
