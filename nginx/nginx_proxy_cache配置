@@ -120,3 +120,94 @@ server {
 
 Speed=98737 pages/min, 20858100 bytes/sec.
 Requests: 95864 susceed, 2873 failed.
+
+
+健康检查模块
+
+在本小节我们介绍一个用于Nginx对后端UpStream集群节点健康状态检查的第三方模块：nginx_upstream_check_module（https://github.com/yaoweibin/nginx_upstream_check_module）。这个模块有资料介绍是TaoBao团队开发的，但是我在GitHua上试图求证时并没有找到直接证据。
+
+这里需要说明的是，目前有很多Nginx模块实现Nginx对后端集群节点的健康监测，不止nginx_upstream_check_module。Nginx官方有一个模块healthcheck_nginx_upstreams也可以实现对后端节点的健康监测（https://github.com/cep21/healthcheck_nginx_upstreams有详细的安装和使用介绍）
+我们回到对nginx_upstream_check_module的讲解，要使用这个第三方模块首先您需要进行下载，然后通过patch命令将补丁打入您原有的Nginx源码中，并且重新进行编译安装。下面我们来重点讲解一下这个模块的安装和使用。
+
+下载nginx_upstream_check_module模块：
+
+wget https://codeload.github.com/yaoweibin/nginx_upstream_check_module/zip/master
+
+您也可以直接到GitHua上进行下载，还一个在linux系统上使用git命令进行下载。
+解压安装，并补丁打入Nginx源码
+
+# unzip ./nginx_upstream_check_module-master.zip
+
+注意是将补丁打入Nginx源码，不是Nginx的安装路径：
+
+# cd ./nginx-1.6.2
+
+# patch -p1 < ../nginx_upstream_check_module-master/check_1.5.12+.patch
+
+如果补丁安装成功，您将看到以下的提示信息：
+patching file src/http/modules/ngx_http_upstream_ip_hash_module.c
+patching file src/http/modules/ngx_http_upstream_least_conn_module.c
+patching file src/http/ngx_http_upstream_round_robin.c
+patching file src/http/ngx_http_upstream_round_robin.h
+
+这里请注意：在nginx_upstream_check_module官网的安装说明中，有一个打补丁的注意事项：
+If you use nginx-1.2.1 or nginx-1.3.0, the nginx upstream round robin
+module changed greatly. You should use the patch named
+'check_1.2.1.patch'.
+If you use nginx-1.2.2+ or nginx-1.3.1+, It added the upstream
+least_conn module. You should use the patch named 'check_1.2.2+.patch'.
+If you use nginx-1.2.6+ or nginx-1.3.9+, It adjusted the round robin
+module. You should use the patch named 'check_1.2.6+.patch'.
+If you use nginx-1.5.12+, You should use the patch named
+'check_1.5.12+.patch'.
+If you use nginx-1.7.2+, You should use the patch named
+'check_1.7.2+.patch'.
+
+这里我们的Nginx的版本是1.6.2，那么就应该打入check_1.5.12+.patch这个补丁
+重新编译安装Nginx：
+
+注意重新编译Nginx，要使用add-module参数将这个第三方模块安装进去：
+
+# ./configure --prefix=/usr/nginx-1.6.2/ --add-module=../nginx_upstream_check_module-master/
+
+# make && make install
+通过以上的步骤，第三方的nginx_upstream_check_module模块就在Nginx中准备好了。接下来我们讲解一下如何使用这个模块。首先看一下upstream的配置信息：
+
+upstream cluster {
+    # simple round-robin
+    server 192.168.0.1:80;
+    server 192.168.0.2:80;
+
+    check interval=5000 rise=1 fall=3 timeout=4000;
+
+    #check interval=3000 rise=2 fall=5 timeout=1000 type=ssl_hello;
+    #check interval=3000 rise=2 fall=5 timeout=1000 type=http;
+    #check_http_send "HEAD / HTTP/1.0\r\n\r\n";
+    #check_http_expect_alive http_2xx http_3xx;
+}
+上面的代码中，check部分就是调用nginx_upstream_check_module模块的语法：
+
+check interval=milliseconds [fall=count] [rise=count]
+[timeout=milliseconds] [default_down=true|false]
+[type=tcp|http|ssl_hello|mysql|ajp|fastcgi]
+interval：必要参数，检查请求的间隔时间。
+
+fall：当检查失败次数超过了fall，这个服务节点就变成down状态。
+
+rise：当检查成功的次数超过了rise，这个服务节点又会变成up状态。
+
+timeout：请求超时时间，超过等待时间后，这次检查就算失败。
+
+default_down：后端服务器的初始状态。默认情况下，检查功能在Nginx启动的时候将会把所有后端节点的状态置为down，检查成功后，在置为up。
+
+type：这是检查通信的协议类型，默认为http。以上类型是检查功能所支持的所有协议类型。
+
+check_http_send http_packet
+
+http_packet的默认格式为："GET / HTTP/1.0\r\n\r\n"
+check_http_send设置，这个设置描述了检查模块在每次检查时，向后端节点发送什么样的信息
+
+check_http_expect_alive [ http_2xx | http_3xx | http_4xx | http_5xx ]
+这些状态代码表示服务器的HTTP响应上是OK的，后端节点是可用的。默认情况的设置是：http_2xx | http_3xx
+
+当您根据您的配置要求完成检查模块的配置后，请首先使用nginx -t 命令监测配置文件是否可用，然后在用nginx -s reload重启nginx。
