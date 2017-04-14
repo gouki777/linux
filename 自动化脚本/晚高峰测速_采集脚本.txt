@@ -1,0 +1,28 @@
+##########测速####################
+#!/bin/bash
+mkdir -p /home/test;
+sum_name=(IP1 IP2 IP3 IP4 IP5)
+s1=`date +"%H"`
+if [ "$s1" -gt "18" ] ; then
+for((i=0;i<"${#sum_name[@]}";i++));do
+ name1=`curl -o /dev/null --connect-timeout 120 -s -w "%{speed_download}\n" ${sum_name[$i]}"/10m"`;
+ echo "$(echo ${name1}|bc|awk '{printf $1/1024}')" >> /home/test/"${sum_name[$i]}".log;
+ echo "$(date +%H%M)" "$(echo ${name1}|bc|awk '{printf $1/1024}')" >> /home/test/GF"${sum_name[$i]}".log;
+ done
+else
+for((i=0;i<"${#sum_name[@]}";i++));do
+ name1=`curl -o /dev/null --connect-timeout 120 -s -w "%{speed_download}\n" ${sum_name[$i]}"/10m"`;
+ echo "$(echo ${name1}|bc|awk '{printf $1/1024}')" >> /home/test/"${sum_name[$i]}".log;
+ done
+fi
+exit 0
+#############采集脚本##############
+#!/bin/bash
+sum_name=(ip1 ip2 ip3 ip4 ip5)
+for((i=0;i<"${#sum_name[@]}";i++));do
+max1=`cat GF${sum_name[$i]}.log|awk '{print $2}'|grep -v '^0'|sort -nr|head -1`;
+min1=$(cat GF${sum_name[$i]}.log|awk '{print $2}'|grep -v '^0'|sort -n|head -1);
+avg1=$(cat GF${sum_name[$i]}.log|awk '{print $2}'|grep -v '^0'|awk '{sum+=$1} END {print sum/NR}');
+echo "${sum_name[$i]}" - "$min1" - "$avg1" - "$max1";
+done
+exit 0
