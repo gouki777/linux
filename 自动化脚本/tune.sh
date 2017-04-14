@@ -1,5 +1,5 @@
 #!/bin/bash
-#lvs 优化脚本
+#web cache优化脚本
 install_tuned() {
 	############tune list############
 	#	 server-powersave
@@ -43,7 +43,7 @@ sysctl_tune_second() {
     echo 10 > /proc/sys/net/ipv4/tcp_fin_timeout
     echo 0 > /proc/sys/net/ipv4/tcp_tw_reuse
     echo 0 > /proc/sys/net/ipv4/tcp_tw_recycle
-    echo 1440000 > /proc/sys/net/ipv4/tcp_max_tw_bucket
+    echo 1440000 > /proc/sys/net/ipv4/tcp_max_tw_buckets
 }
 
 sysctl_tune_fs() {
@@ -102,13 +102,15 @@ sysctl_tune_vm() {
 }
 
 nic_tune() {
+	ethtool -C $1 adaptive-rx off rx-usecs 0 rx-frames 0
 	ethtool -K $1 gro off
 	ethtool -K $1 tso off
 	ethtool -G $1 rx "$(ethtool  -g $1 | grep -m 1 -E 'RX:'  | awk '{print $2}')"
 	ethtool -G $1 tx "$(ethtool  -g $1 | grep -m 1 -E 'TX:'  | awk '{print $2}')"
 	modprobe fq_codel
-    tc qdisc add dev $1 root fq_codel 2>/dev/null
+	tc qdisc add dev $1 root fq_codel 2>/dev/null
 }
+
 stop_service() {
 	service irqbalance stop
 	chkconfig cpuspeed off
@@ -176,15 +178,23 @@ network_irq(){
 	echo -e "["`date "+%F %T"`"]\tSet down over." ;
 }
 ##################main###############
-kernel_version="$(uname -r)"
-install_tuned
+if [[ "${#bond_devs[@]}" -ne 0 ]];then
+        for bond in "${bond_devs[@]}";
+        do
+                mii="$(grep 'MII Polling Interval (ms):'  ${bond_proc}/${bond} | awk -F ':' '{print $2}')"
+                if [[ $mii -eq 0 ]];then
+                        echo -e "WARNING:[$bond] miimon is 0 ms ,please change it to 100ms!!!!!\nACTION:script not run,exit!"
+                        exit 1
 
+                fi
+        done
+fi
 for nic in $(ifconfig  | grep '^[[:alpha:]]' | awk '$1!~/^(lo|bond|br|docker|^virbr)/{print $1}'  | grep -v ':');
 do 
 	echo "1.${nic} network_irq"
 	network_irq ${nic} 2>/dev/null
-	echo "2.${nic} nic_tune"
-	nic_tune ${nic} 2>/dev/null
+#	echo "2.${nic} nic_tune"
+#	nic_tune ${nic} 2>/dev/null
 
 done
 

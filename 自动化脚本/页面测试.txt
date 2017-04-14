@@ -4,25 +4,30 @@
 #首包相应：%{time_starttransfer} = 首包 - 建连                                              #
 # time_starttransfer 开始传输时间。在发出请求之后，Web 服务器返回数据的第一个字节所用的时间 #
 #%{time_pretransfer} 从client发出请求；到web的server 响应第一个字节的时间                   #
-#页面大小: %{size_download}    单位：byte (B)
-#时间 都是ms
-#下载速度  单位-字节每秒。(Bytes per second)
+#页面大小: %{size_download}    单位：byte (B)                                               #
+#时间 都是ms                                                                                #
+#下载速度  单位-字节每秒。(Bytes per second)                                                #
+#curl -o /dev/null -s -w "\                                                                 #
+#网站状态: %{http_code}                                                                     #
+#解析用时: %{time_namelookup}                                                               #
+#建连用时: %{time_connect}                                                                  #
+#首包用时：%{time_starttransfer}                                                            # 
+#页面耗时: %{time_total}                                                                    #
+#页面大小: %{size_download}                                                                 #
+#下载速度: %{speed_download}\n" http://www.baidu.com                                        #
 #############################################################################################
-#curl -o /dev/null -s -w "\
-#网站状态: %{http_code}
-#解析用时: %{time_namelookup}
-#建连用时: %{time_connect}
-#首包用时：%{time_starttransfer}
-#页面耗时: %{time_total}
-#页面大小: %{size_download}
-#下载速度: %{speed_download}\n" http://www.baidu.com
+if [ $# != 2 ] ; then
+echo "Usage: `basename $0` 'http://www.baidu.com/' '(1.2.3.4:80|192.168.10.10:51899)'" >&2
+exit 1
+fi
 
-name1=`curl -o /dev/null -s -w "%{http_code} %{time_namelookup} %{time_connect} %{time_starttransfer} %{time_total} %{size_download} %{speed_download}\n" http://www.baidu.com`
+name1=`curl -o /dev/null -x $2 -s -w "%{http_code} %{time_namelookup} %{time_connect} %{time_starttransfer} %{time_total} %{size_download} %{speed_download}\n" $1`
 name2=($name1)
 echo "网站状态: ${name2[0]}
 解析用时: ${name2[1]}
-建连用时: ${name2[2]}
-首包用时: ${name2[3]}
+建连用时: "$(echo "${name2[2]} - ${name2[1]}"|bc|awk '{printf "%.3f\n",$1}')"
+首包用时: "$(echo "${name2[3]} - ${name2[2]}"|bc|awk '{printf "%.3f\n",$1}')"
 页面耗时: ${name2[4]}
-页面大小: ${name2[5]}
-下载速度: ${name2[6]}"
+页面大小(KB): "$(echo ${name2[5]}|bc|awk '{printf $1/1024}')" 
+下载速度(KB): "$(echo ${name2[6]}|bc|awk '{printf $1/1024}')"
+"
