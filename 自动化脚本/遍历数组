@@ -7,3 +7,32 @@ sum_name=(1 2 3 4 5 6)            #数组
 for((i=0;i<"${#sum_name[@]}";i++));do 
  echo ${sum_name[$i]};            #遍历数组中逐一列出数组1-6的元素 for
 done
+
+#! /bin/bash
+A="aa bb cc dd ee"
+B="AA bb CC dd ee"
+
+AA=($A)
+BB=($B)
+for i in `seq 0 ${#AA[@]}`;do
+  if [ ${AA[$i]} != ${BB[$i]} ];then
+    X[$i]=${AA[$i]}
+  fi
+done
+echo ${X[@]}
+
+name1="$(cat /aaa|grep "dns.nameservers"|grep -o -E "[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}")"
+name2="$(cat /bbb|grep "^nameserver"|grep -o -E "[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}")"
+name3=($name1)
+name4=($name2)
+  for((i=0;i<"${#name4[@]}";i++));do
+    if [ -z "${name3[$i]}" ];then
+      X[$i]=${name4[$i]}
+#    elif [ ${name3[$i]} != ${name4[$i]} ];then            #元素对比  1=1
+     elif [[ "${name4[*]}" =~ "${name3[$i]}" ]];then       
+	 #=~ 左面是输出数组的所有值 =~ 右面是设定变量的值 然后 看右面的值 是否在左面输出的里面 ，如果在就为真，
+	 #这个好像和awk的一样吧，左面可以完全等于右面，也可以包涵右面但是不能被右面包涵
+      X[$i]=${name4[$i]}
+    fi
+  done
+echo ${X[@]};
