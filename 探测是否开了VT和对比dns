@@ -1,0 +1,25 @@
+#!/bin/bash
+export LANG=en_US.UTF-8
+#17-05-05
+if [ -e /usr/local/squid ]; then
+name1="$(cat /usr/local/squid/etc/trafficserver/records.config|grep "dns.nameservers"|grep -o -E "[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}")"
+name2="$(cat /etc/resolv.conf|grep "^nameserver"|grep -o -E "[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"|grep -v '8.8.8'|grep -v '114.114.114.114')"
+name3=($name1)
+name4=($name2)
+  for i in `seq 0 ${#name3[@]}`;do
+    if [ "${name3[$i]}" != "${name4[$i]}" ];then
+      X[$i]=${name3[$i]}
+    fi
+  done
+echo ${X[@]}
+fi
+#######################################
+##监测2630是否是32核(是否开了VT)
+#if [ -e /usr/local/squid ]; then 
+#  if [ 16 = "$(cat /proc/cpuinfo |grep processor|wc -l)" -a 2 = "$(cat /proc/cpuinfo |grep "physical id"|sort |uniq|wc -l)" -a "E5-2630" = "$(cat /proc/cpuinfo |grep "model name"|uniq -c|grep -o "E5-2630")" ]; then 
+#    echo "CPU-NEED-VT";
+#  else 
+#    echo "OK";
+#  fi
+#fi
+exit 0;
