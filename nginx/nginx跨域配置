@@ -1,0 +1,27 @@
+服务端Nginx配置
+要实现CORS跨域，服务端需要这个一个流程:http://www.html5rocks.com/static/images/cors_server_flowchart.png
+
+对于简单请求，如GET，只需要在HTTP Response后添加Access-Control-Allow-Origin。
+
+对于非简单请求，比如POST、PUT、DELETE等，浏览器会分两次应答。第一次preflight（method: OPTIONS），主要验证来源是否合法，并返回允许的Header等。第二次才是真正的HTTP应答。所以服务器必须处理OPTIONS应答。
+
+http://enable-cors.org/server_nginx.html这里是一个nginx启用COSR的参考配置。
+
+流程如下：
+
+首先查看http头部有无origin字段；
+如果没有，或者不允许，直接当成普通请求处理，结束；
+如果有并且是允许的，那么再看是否是preflight(method=OPTIONS)；
+如果是preflight，就返回Allow-Headers、Allow-Methods等，内容为空；
+如果不是preflight，就返回Allow-Origin、Allow-Credentials等，并返回正常内容。
+
+简单if配置
+server 或者 location / {...};
+if ( $http_origin ~ "^http://.*123\.com") {                   #if ( $http_origin ~ "^http://(.*123\|456|789).com")
+  add_header 'Access-Control-Allow-Origin' "$http_origin";
+  add_header 'Access-Control-Allow-Credentials' "true";      (可选，可去掉)
+  add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS';
+}
+
+
+#参考文档http://blog.csdn.net/oyzl68/article/details/18741057
