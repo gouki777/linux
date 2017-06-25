@@ -1,0 +1,9 @@
+合并两行为一行，如尾行不满足合并，单独行不打印出来。
+sed -n 'N;s/\n/\t/;p' 1.txt
+em1	up
+em2	up
+em3	down
+偶数判断如果是偶数字，输出
+[root@rails ~]# sed -n 'N;s/\n/\t/;p' 1.txt|wc -l|awk '{if (NR%2==0) {print NR}}'
+奇数判断如果是奇数字，输出
+[root@rails ~]# sed -n 'N;s/\n/\t/;p' 1.txt|wc -l|awk '{if (NR%2==1) {print NR}}'
