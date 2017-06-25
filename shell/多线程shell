@@ -1,21 +1,21 @@
 #!/bin/bash
 #################
-#¶àÏß³Ì²¢·¢bash #
+#å¤šçº¿ç¨‹å¹¶å‘bash #
 #################
 export PATH=$PATH:/bin:/usr/bin:/usr/local/bin
 exec 3>>/tmp/del.log
 echo "====================================================" >&3
 echo -e "\n[`date +%Y/%m/%d\ %H:%M:%S`] del $RUNUSER PID:$$" >&3
 
-tmpfile=$$.fifo  #´´½¨¹ÜµÀÃû³Æ
-mkfifo $tmpfile       #´´½¨¹ÜµÀ
-exec 4<>$tmpfile      #´´½¨ÎÄ¼þ±êÊ¾4£¬ÒÔ¶ÁÐ´·½Ê½²Ù×÷¹ÜµÀ$tmpfile
-rm $tmpfile           #½«´´½¨µÄÍ¨µÀÎÄ¼þÇå³þ
-thred=20    #Ö¸¶¨²¢·¢ÊýÏß³Ì+1
-#####±äÁ¿###########
+tmpfile=$$.fifo  #åˆ›å»ºç®¡é“åç§°
+mkfifo $tmpfile       #åˆ›å»ºç®¡é“
+exec 4<>$tmpfile      #åˆ›å»ºæ–‡ä»¶æ ‡ç¤º4ï¼Œä»¥è¯»å†™æ–¹å¼æ“ä½œç®¡é“$tmpfile
+rm $tmpfile           #å°†åˆ›å»ºçš„é€šé“æ–‡ä»¶æ¸…æ¥š
+thred=20    #æŒ‡å®šå¹¶å‘æ•°çº¿ç¨‹+1
+#####å˜é‡###########
 seq='001a 001b 001c 001d'
 #####################
-#Îª²¢·¢Ïß³Ì´´½¨ÏàÓ¦µÄ¸öÊýÕ¼Î»
+#ä¸ºå¹¶å‘çº¿ç¨‹åˆ›å»ºç›¸åº”çš„ä¸ªæ•°å ä½
 for (( i=1; i<=$thred;i++)); do
    echo "";
 done >&4
@@ -31,4 +31,4 @@ echo >&4
 done
 wait
 exec 4>&-
-exit 0
+exit 0;
