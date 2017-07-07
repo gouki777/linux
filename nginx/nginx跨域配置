@@ -1,27 +1,27 @@
-·şÎñ¶ËNginxÅäÖÃ
-ÒªÊµÏÖCORS¿çÓò£¬·şÎñ¶ËĞèÒªÕâ¸öÒ»¸öÁ÷³Ì:http://www.html5rocks.com/static/images/cors_server_flowchart.png
+æœåŠ¡ç«¯Nginxé…ç½®
+è¦å®ç°CORSè·¨åŸŸï¼ŒæœåŠ¡ç«¯éœ€è¦è¿™ä¸ªä¸€ä¸ªæµç¨‹:http://www.html5rocks.com/static/images/cors_server_flowchart.png
 
-¶ÔÓÚ¼òµ¥ÇëÇó£¬ÈçGET£¬Ö»ĞèÒªÔÚHTTP ResponseºóÌí¼ÓAccess-Control-Allow-Origin¡£
+å¯¹äºç®€å•è¯·æ±‚ï¼Œå¦‚GETï¼Œåªéœ€è¦åœ¨HTTP Responseåæ·»åŠ Access-Control-Allow-Originã€‚
 
-¶ÔÓÚ·Ç¼òµ¥ÇëÇó£¬±ÈÈçPOST¡¢PUT¡¢DELETEµÈ£¬ä¯ÀÀÆ÷»á·ÖÁ½´ÎÓ¦´ğ¡£µÚÒ»´Îpreflight£¨method: OPTIONS£©£¬Ö÷ÒªÑéÖ¤À´Ô´ÊÇ·ñºÏ·¨£¬²¢·µ»ØÔÊĞíµÄHeaderµÈ¡£µÚ¶ş´Î²ÅÊÇÕæÕıµÄHTTPÓ¦´ğ¡£ËùÒÔ·şÎñÆ÷±ØĞë´¦ÀíOPTIONSÓ¦´ğ¡£
+å¯¹äºéç®€å•è¯·æ±‚ï¼Œæ¯”å¦‚POSTã€PUTã€DELETEç­‰ï¼Œæµè§ˆå™¨ä¼šåˆ†ä¸¤æ¬¡åº”ç­”ã€‚ç¬¬ä¸€æ¬¡preflightï¼ˆmethod: OPTIONSï¼‰ï¼Œä¸»è¦éªŒè¯æ¥æºæ˜¯å¦åˆæ³•ï¼Œå¹¶è¿”å›å…è®¸çš„Headerç­‰ã€‚ç¬¬äºŒæ¬¡æ‰æ˜¯çœŸæ­£çš„HTTPåº”ç­”ã€‚æ‰€ä»¥æœåŠ¡å™¨å¿…é¡»å¤„ç†OPTIONSåº”ç­”ã€‚
 
-http://enable-cors.org/server_nginx.htmlÕâÀïÊÇÒ»¸önginxÆôÓÃCOSRµÄ²Î¿¼ÅäÖÃ¡£
+http://enable-cors.org/server_nginx.htmlè¿™é‡Œæ˜¯ä¸€ä¸ªnginxå¯ç”¨COSRçš„å‚è€ƒé…ç½®ã€‚
 
-Á÷³ÌÈçÏÂ£º
+æµç¨‹å¦‚ä¸‹ï¼š
 
-Ê×ÏÈ²é¿´httpÍ·²¿ÓĞÎŞorigin×Ö¶Î£»
-Èç¹ûÃ»ÓĞ£¬»òÕß²»ÔÊĞí£¬Ö±½Óµ±³ÉÆÕÍ¨ÇëÇó´¦Àí£¬½áÊø£»
-Èç¹ûÓĞ²¢ÇÒÊÇÔÊĞíµÄ£¬ÄÇÃ´ÔÙ¿´ÊÇ·ñÊÇpreflight(method=OPTIONS)£»
-Èç¹ûÊÇpreflight£¬¾Í·µ»ØAllow-Headers¡¢Allow-MethodsµÈ£¬ÄÚÈİÎª¿Õ£»
-Èç¹û²»ÊÇpreflight£¬¾Í·µ»ØAllow-Origin¡¢Allow-CredentialsµÈ£¬²¢·µ»ØÕı³£ÄÚÈİ¡£
+é¦–å…ˆæŸ¥çœ‹httpå¤´éƒ¨æœ‰æ— originå­—æ®µï¼›
+å¦‚æœæ²¡æœ‰ï¼Œæˆ–è€…ä¸å…è®¸ï¼Œç›´æ¥å½“æˆæ™®é€šè¯·æ±‚å¤„ç†ï¼Œç»“æŸï¼›
+å¦‚æœæœ‰å¹¶ä¸”æ˜¯å…è®¸çš„ï¼Œé‚£ä¹ˆå†çœ‹æ˜¯å¦æ˜¯preflight(method=OPTIONS)ï¼›
+å¦‚æœæ˜¯preflightï¼Œå°±è¿”å›Allow-Headersã€Allow-Methodsç­‰ï¼Œå†…å®¹ä¸ºç©ºï¼›
+å¦‚æœä¸æ˜¯preflightï¼Œå°±è¿”å›Allow-Originã€Allow-Credentialsç­‰ï¼Œå¹¶è¿”å›æ­£å¸¸å†…å®¹ã€‚
 
-¼òµ¥ifÅäÖÃ
-server »òÕß location / {...};
+ç®€å•ifé…ç½®
+server æˆ–è€… location / {...};
 if ( $http_origin ~ "^http://.*123\.com") {                   #if ( $http_origin ~ "^http://(.*123\|456|789).com")
   add_header 'Access-Control-Allow-Origin' "$http_origin";
-  add_header 'Access-Control-Allow-Credentials' "true";      (¿ÉÑ¡£¬¿ÉÈ¥µô)
+  add_header 'Access-Control-Allow-Credentials' "true";      (å¯é€‰ï¼Œå¯å»æ‰)
   add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS';
 }
 
 
-#²Î¿¼ÎÄµµhttp://blog.csdn.net/oyzl68/article/details/18741057
+#å‚è€ƒæ–‡æ¡£http://blog.csdn.net/oyzl68/article/details/18741057
