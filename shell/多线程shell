@@ -12,8 +12,8 @@ mkfifo $tmpfile       #创建管道
 exec 4<>$tmpfile      #创建文件标示4，以读写方式操作管道$tmpfile
 rm $tmpfile           #将创建的通道文件清楚
 thred=20    #指定并发数线程+1
-#####变量###########
-seq='001a 001b 001c 001d'
+#####单文件遍历###########
+seq=`cat 001`
 #####################
 #为并发线程创建相应的个数占位
 for (( i=1; i<=$thred;i++)); do
@@ -28,6 +28,42 @@ for I in $seq ; do
 sleep 2;
 echo >&4
 }&
+done
+wait
+exec 4>&-
+exit 0;
+
+
+##########################多文件遍历#################################
+#!/bin/bash
+#################
+#多线程并发bash #
+#################
+export PATH=$PATH:/bin:/usr/bin:/usr/local/bin
+exec 3>>nos.log
+echo "====================================================" >&3
+echo -e "\n[`date +%Y/%m/%d\ %H:%M:%S`] read PID:$$" >&3
+
+tmpfile=$$.fifo  #创建管道名称
+mkfifo $tmpfile       #创建管道
+exec 4<>$tmpfile      #创建文件标示4，以读写方式操作管道$tmpfile
+rm $tmpfile           #将创建的通道文件清楚
+thred=10    #指定并发数线程+1
+#####变量###########
+sum_name='111 222 333 444'    #4个文件每个文件内有100行，从111……222……333……444 遍历
+#####################
+#为并发线程创建相应的个数占位
+for (( i=1; i<=$thred;i++)); do
+   echo "";
+done >&4
+for((i=0;i<"${#sum_name[@]}";i++));do
+  for I in `cat ${sum_name[$i]}`; do
+ read -u4
+ {
+    echo "[`date +%Y/%m/%d\ %H:%M:%S`] PID:$$ ${sum_name[$i]} $I";sleep 1;
+echo >&4
+}&
+done
 done
 wait
 exec 4>&-
