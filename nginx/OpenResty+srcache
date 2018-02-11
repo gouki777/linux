@@ -1,0 +1,66 @@
+    server {
+        listen 80;
+        server_name localhost 127.0.0.1;
+        root /export;
+        index index.html index.htm index.php;
+        access_log logs/access.log main;
+        more_set_headers 'X-DNS-Prefetch-Control: on';
+#################ngxÄ£¿é##################
+#         header_filter_by_lua_block {
+#        ngx.header["ngx.var.remote_addr"] = ngx.var.remote_addr;
+#        ngx.header["ngx.var.server_addr"]= ngx.var.server_addr;
+#        ngx.header["ngx.var.host"] = ngx.var.host;
+#        ngx.header["ngx.now"]= ngx.now();
+#        ngx.header["ngx.time"]= ngx.time();
+#        ngx.header["ngx.today"]= ngx.today();
+#        ngx.header["X-DNS-Prefetch-Control"]= on;
+#        ngx.header["ngx.localtime"]= ngx.localtime();
+#        ngx.header["ngx.utctime"]= ngx.utctime();
+#        ngx.header["ngx.var.scheme"]= ngx.var.scheme;
+#        ngx.header["ngx.status"]= ngx.status;
+#       }
+############################
+  #location ~ .*\.(css|jpg)$ {
+        location / {
+                #default_type text/css;
+                srcache_store_private on;
+#                srcache_store_no_cache on;
+                srcache_methods GET;
+                srcache_response_cache_control off;
+
+                set $key $request_uri;
+                set_escape_uri $escaped_key $key;
+                srcache_fetch GET /redis $key;
+                srcache_default_expire 1m;
+                #srcache_default_expire 172800;
+                srcache_store PUT /redis2 key=$escaped_key&exptime=$srcache_expire;
+########################
+                        add_header X-Cached-From $srcache_fetch_status;
+                        set_md5 $md5key $key;
+                        add_header X-md5-key $md5key;
+                        add_header X-Cached-Store $srcache_store_status;
+                        add_header X-Key $key;
+                        add_header X-Query_String $query_string;
+                        add_header X-expire $srcache_expire;
+###########################
+ }
+
+ location = /redis {
+     internal;
+     set_md5 $redis_key $args;
+     redis_pass 127.0.0.1:6379;
+ }
+
+ location = /redis2 {
+     internal;
+     set_unescape_uri $exptime $arg_exptime;
+     set_unescape_uri $key $arg_key;
+     set_md5 $key;
+
+     redis2_query set $key $echo_request_body;
+     redis2_query expire $key $exptime;
+     redis2_pass 127.0.0.1:6379;
+ }
+#####################
+}
+}
