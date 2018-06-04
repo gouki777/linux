@@ -1,0 +1,31 @@
+[root@bianyipingtai-2 shell]# /usr/local/php/sbin/php-fpm -i |grep Configure 查看老环境
+Configure Command => './configure' '--prefix=/usr/local/php' '--with-config-file-path=/usr/local/php/etc' '--with-gd' '--with-libxml-dir' '--with-iconv-dir' '--with-png-dir' '--with-jpeg-dir=/usr/local/jpeg_v8d' '--with-zlib' '--with-freetype-dir=/usr/local/include/freetype2/freetype' '--with-mcrypt' '--with-mhash' '--enable-gd-native-ttf' '--with-readline' '--with-curl' '--with-bz2' '--with-mysql=/usr/local/mysql' '--with-mysqli=/usr/local/mysql/bin/mysql_config' '--with-openssl-dir' '--without-pear' '--enable-fpm' '--enable-mbstring' '--enable-soap' '--enable-xml' '--enable-pdo' '--enable-ftp' '--enable-zip' '--enable-bcmath' '--enable-sockets'
+
+1048  20151009-105612:wget http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.13.1.tar.gz     #依赖环境
+ 1049  20151009-105656:tar zxvf libiconv-1.13.1.tar.gz 
+ 1050  20151009-105701:cd libiconv-1.13.1
+ 1051  20151009-105707:./configure --prefix=/usr/local
+ 1052  20151009-105730:make && make install
+ 1053  20151009-105748:ln -s /usr/local/lib/libiconv.so /usr/lib
+ 1054  20151009-105754:ln -s /usr/local/lib/libiconv.so.2 /usr/lib/libiconv.so.2
+ 1063  20151009-110057:./configure --prefix=/usr/local/php5.4.45 --with-config-file-path=/usr/local/php5.4.45/etc --with-fpm-user=www --with-fpm-group=www --with-gd --with-libxml-dir --with-iconv-dir --with-png-dir --with-jpeg-dir=/usr/local/jpeg_v8d --with-zlib --with-freetype-dir=/usr/local/include/freetype2/freetype --with-mcrypt --with-mhash --enable-gd-native-ttf --with-readline --with-curl --with-bz2 --with-mysql=/usr/local/mysql --with-mysqli=/usr/local/mysql/bin/mysql_config --with-openssl-dir --without-pear --enable-fpm --enable-mbstring --enable-soap --enable-xml --enable-pdo --enable-ftp --enable-zip --enable-bcmath --enable-sockets
+ 1064  20151009-110154:make ZEND_EXTRA_LIBS='-liconv'
+ 1065  20151009-110243:make install
+ 1066  20151009-110318:/usr/local/php5.4.45/sbin/php-fpm -v
+ 1067  20151009-110321:/usr/local/php5.4.45/sbin/php-fpm -t
+ 1070  20151009-110351:cp -rf php-fpm.conf php.ini /usr/local/php5.4.45/etc/
+ 1071  20151009-110356:cd /usr/local/php5.4.45/etc/
+ 1075  20151009-110420:ldd /usr/local/php5.4.45/sbin/php-fpm 
+ 1076  20151009-110451:rm -f /usr/bin/php
+ 1078  20151009-110601:ln -s /usr/local/php5.4.45/bin/php /usr/bin/php
+ 1080  20151009-110641:ln -s /usr/local/php5.4.45/bin/phpize /usr/bin/phpize
+ 1081  20151009-110711:ln -s /usr/local/php5.4.45/sbin/php-fpm /usr/bin/php-fpm
+ 1088  20151009-110752:mv php php5.1.14.151009bak
+ 1090  20151009-110755:ll -h
+ 1091  20151009-110810:ln -s php5.4.45 php
+ 1092  20151009-110811:ll -h
+ 1093  20151009-110828:killall php-fpm
+ 1094  20151009-110831:ps -ef
+ 1095  20151009-110839:/usr/local/php/sbin/php-fpm -t
+ 1097  20151009-110842:/usr/local/php/sbin/php-fpm -v
+ 1098  20151009-110846:/usr/local/php/sbin/php-fpm

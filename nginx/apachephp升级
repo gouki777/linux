@@ -1,0 +1,28 @@
+wget -q http://mirrors.cnnic.cn/apache/httpd/httpd-2.2.29.tar.gz
+tar zxf httpd-2.2.29.tar.gz
+cd httpd-2.2.29
+./configure --prefix=/usr/local/apache-2.2.29 --enable-so --enable-include --enable-rewrite --enable-deflate
+Make && make install
+cp –r /usr/local/apache-2.2.25/conf/httpd.conf /usr/local/apache-2.2.29/conf/httpd.conf
+rm –rf /usr/local/apache
+ln –s /usr/local/apache-2.2.29 /usr/local/apache
+##########php升级###########
+下载5.3.28版本php
+tar zxvf php-5.3.28.tar.gz
+cd /shell/php-5.3.28
+./configure --prefix=/usr/local/php-5.3.28 --with-apxs2=/usr/local/apache-2.2.29/bin/apxs --with-gd --with-jpeg-dir --with-png-dir --with-zlib --with-iconv --with-libxml-dir=/usr/lib --with-mysql=/usr/local/mysql --with-mcrypt --enable-soap --with-curl --enable-gd-native-ttf --enable-mbstring
+make
+make ZEND_EXTRA_LIBS='-liconv'
+make install
+
+cp -r 5.3.27/etc 5.3.28/etc #php.ini
+rm -rf /usr/local/php 
+ln -s /usr/local/php-5.3.28 /usr/local/php
+
+killall httpd
+/usr/local/apache-2.2.29/bin/httpd -k start
+
+[root@microreading php-5.3.28]# curl --head 127.0.0.1
+Date: Sat, 28 Feb 2015 02:01:44 GMT
+Server: Apache/2.2.29 (Unix) PHP/5.3.28
+Content-Type: text/html; charset=iso-8859-1
