@@ -1,0 +1,4 @@
+拉主库
+git clone https://git.xxxidc.com/xxx/xxx.git
+拉分支dev仓库
+git clone -b dev https://git.xxxidc.com/xxx/xxx.git
