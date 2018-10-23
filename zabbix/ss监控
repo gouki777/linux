@@ -1,0 +1,13 @@
+#!/bin/bash
+case $1 in
+estab)ss -o state established|wc -l
+;;
+closewait)ss -o state close-wait|wc -l
+;;
+timewait)ss -o state TIME-WAIT|wc -l
+;;
+http)ss sport = :http|wc -l
+;;
+https)ss sport = :https|wc -l
+;;
+esac

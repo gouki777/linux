@@ -1,0 +1,39 @@
+zabbix表修复
+修复mysql表后，zabbix恢复正常。
+
+tail -f /tmp/zabbix_proxy.log                  #日志显示表损坏
+11071:20160711:125540.642 [Z3005] query failed: [145] Table './zabbix_proxy/proxy_history' is marked as crashed and should be repaired 
+[insert into proxy_history (itemid,clock,ns,value) values (43192,1468212937,659738848,'0.000000'),
+(43191,1468212937,659738848,'1'),(43193,1468212937,659738848,'0.001420'),
+(25179,1468212939,823320375,'94721562.000000'),(43359,1468212939,823924933,'7995741'),
+(43899,1468212940,99590783,'6760181.000000'),(25180,1468212940,114734096,'103100589.000000'),
+(24400,1468212940,115258941,'32263544025'),(41680,1468212940,116238201,'27801467665082'),
+(43900,1468212940,423060848,'3832129.000000'),(43360,1468212940,423533399,'0.080000');
+
+mysql> repair table proxy_history;                #修复表 
+| zabbix_proxy.proxy_history | repair | info     | Found block that points outside data file at 42869072 |
+| zabbix_proxy.proxy_history | repair | info     | Found block that points outside data file at 42869080 |
+| zabbix_proxy.proxy_history | repair | warning  | Number of rows changed from 5007 to 5180              |
+| zabbix_proxy.proxy_history | repair | status   | OK                                                    |
++----------------------------+--------+----------+-------------------------------------------------------+
+12097 rows in set (0.63 sec)
+mysql> check table proxy_history;                 #查看修复表状态
++----------------------------+-------+----------+----------+
+| Table                      | Op    | Msg_type | Msg_text |
++----------------------------+-------+----------+----------+
+| zabbix_proxy.proxy_history | check | status   | OK       |
++----------------------------+-------+----------+----------+
+1 row in set (0.00 sec)
+
+[root@zabbix ~]# /etc/init.d/zabbix_proxy restart
+Shutting down zabbix_proxy:                                [确定]
+Starting zabbix_proxy:                                     [确定]
+
+日志数据恢复正常
+
+ 11072:20160711:125819.711 database is down: reconnecting in 10 seconds
+ 11071:20160711:125827.283 database connection re-established
+ 11073:20160711:125828.711 database connection re-established
+ 11069:20160711:125829.466 database connection re-established
+ 11063:20160711:125829.478 database connection re-established
+ 11072:20160711:125829.712 database connection re-established
