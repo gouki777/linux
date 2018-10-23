@@ -1,0 +1,85 @@
+traffic_shell 4.1.X
+# echo "show"|./ traffic_shell
+trafficserver> show
+show:alarms                      #暂时没有开放
+show:cache                       #查看策略
+show:cache-stats                  #增删查改状态数
+show:cluster                      #cluster端口
+show:dns-resolver                     
+show:dns-stats                    #当前每秒解析多少次dns
+show:hostdb                      #dns time策略
+show:hostdb-stats                 #db或者dslookup命中比例
+show:http                        #规则查看
+show:http-stats                    #流量大小 连接数 线程
+show:http-trans-stats               #命中率+ms延迟
+show:icp                         #icp功能暂时off
+show:icp-stats
+show:logging
+show:logging-stats
+show:parent
+show:proxy
+show:proxy-stats           
+show:remap                       #show策略
+show:scheduled-update              #更新规则
+show:security                      #ip黑白名单-安全防火墙
+show:socks
+show:ssl
+show:status
+show:version
+show:virtual-ip
+###########命中率###############
+trafficserver> show:proxy-stats
+Document Hit Rate -------- 76.998055 %	 *
+Ram cache Hit Rate ------- 52.659573 %	 *
+Bandwidth Saving --------- 93.646294 %	 *
+Cache Percent Free ------- 24.746351 %
+Open Server Connections -- 513
+Open Client Connections -- 663
+Open Cache Connections --- 83
+Client Throughput -------- 505.834564 MBit/Sec
+Transaction Per Second --- 1098.798462
+
+
+
+
+# echo "show:http-stats"|./traffic_shell
+Successfully Initialized MgmtAPI in /usr/local/squid/var/trafficserver 
+trafficserver> show:http-stats
+
+--Client--
+Total Document Bytes ----- 25255014 MB
+Total Header Bytes ------- 191435 MB
+Total Connections -------- 682
+Transactins In Progress -- 381
+--Server--
+Total Document Bytes ----- 1513534 MB
+Total Header Bytes ------- 40436 MB
+Total Connections -------- 602
+Transactins In Progress – 135
+
+
+echo "show:http-trans-stats"|./traffic_shell
+trafficserver> show:http-trans-stats
+
+HTTP Transaction Frequency and Speeds
+Transaction Type              Frequency   Speed(ms)
+--Hits--
+Fresh ----------------------- 67.145325 %  937
+Stale Revalidated ----------- 2.688404 %  951
+--Misses--
+Now Cached ------------------ 27.045996 %  984
+Server No Cache ------------- 0.712589 %  905
+Stale Reloaded -------------- 1.932628 %  944
+Client No Cache ------------- 0.000000 %  0
+--Errors--
+Connection Failures --------- 0.291514 %  881
+Other Errors ---------------- 0.000000 %  0
+--Aborted Transactions--
+Client Aborts --------------- 0.183546 %  973
+Questionable Client Aborts -- 0.000000 %  0
+Partial Request Hangups ----- 0.000000 %  0
+Pre-Request Hangups --------- 0.000000 %  0
+Pre-Connect Hangups --------- 0.000000 %  0
+--Other Transactions--
+Unclassified ---------------- 0.000000 %  0
+

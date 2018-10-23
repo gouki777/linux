@@ -1,0 +1,12 @@
+#!/bin/bash
+##################
+#core 崩溃日志导出
+##################
+cd /usr/local/squid/
+for i in `ls -t|grep core`; do 
+gdb -c $i /usr/local/squid/bin/traffic_server <<EOF >>/tmp/core.out 2>/dev/null
+bt
+EOF
+done
+cat /tmp/core.out |egrep -o "[A-Za-z0-9_]*\.c{1,}\:[0-9]+"
+exit 0

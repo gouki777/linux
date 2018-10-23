@@ -1,0 +1,6 @@
+##  ÏÂÔØµØÖ· http://archive.apache.org/dist/trafficserver/  ##
+./configure --prefix=/usr/local/ats423 --user=root --group=root
+make
+make install
+make check
+

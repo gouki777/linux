@@ -1,0 +1,284 @@
+#######################################################################################
+#通过ats 的traffic_line 可以查询ats
+#软件当前的一系列状态，这里稍微整理一下常用的命令，做个备忘，本文参考自官网 
+#The traffic_line -r option accepts the following variable names:
+#4.2.X
+#https://docs.trafficserver.apache.org/en/4.2.x/reference/commands/traffic_line.en.html  
+#######################################################################################
+traffic_line -L  ##restart 本地ats
+proxy.process.cache.interim.read.success#SSD硬盘 命中率    
+proxy.process.cache.disk.read.success   #SSD硬盘 命中率 
+proxy.process.cache.ram.read.success    #内存ram 命中率 
+proxy.node.cache_hit_ratio_avg_10s      #查询当前缓存服务命中率
+proxy.node.current_server_connections   #到后端源的连接数
+proxy.node.current_client_connections   #前端用户到TServer的连接数
+proxy.node.user_agent_xacts_per_second  #平均每秒处理的并发数    #Requests
+proxy.node.client_throughput_out        #当前TServer输出到前端的带宽流量（单位Mbps）
+proxy.process.dns.lookup_successes      #成功解析总数（计数器）
+
+proxy.node.hostname_FQ                  #主机名
+proxy.node.hostname                     #主机名
+proxy.node.restarts.manager.start_time  #mananger 启动时间
+proxy.node.restarts.proxy.start_time    #proxy 启动时间
+proxy.node.restarts.proxy.stop_time     #关闭时间-无用
+proxy.node.restarts.proxy.restart_count #重启次数top-restart-timeout-180000
+proxy.node.version.manager.short        #manager 版本号
+proxy.node.version.manager.long         #manager 详细信息
+proxy.node.version.manager.build_number
+proxy.node.version.manager.build_time     #版本当前时间
+proxy.node.version.manager.build_date    #版本当前日期
+proxy.node.version.manager.build_machine #本机hostsname
+proxy.node.version.manager.build_person   #编译的用户
+proxy.node.bandwidth_hit_ratio            #ats带宽的命中率
+proxy.node.bandwidth_hit_ratio_int_pct    #总共命中次数
+proxy.node.bandwidth_hit_ratio_avg_10s    #前10s 整体命中率
+proxy.node.bandwidth_hit_ratio_avg_10s_int_pct
+
+
+proxy.node.proxy_running                 #代理软件当前状态
+proxy.node.cache.percent_free            #缓存空间空闲率
+proxy.node.cache_hit_ratio               #缓存命中率
+proxy.node.cache_hit_ratio_int_pct
+proxy.node.cache_hit_ratio_avg_10s_int_pct
+
+proxy.node.cache_total_hits_avg_10s
+proxy.node.cache_total_misses_avg_10s
+proxy.node.cache_hit_ratio_avg_10s
+
+
+proxy.node.cache.bytes_total             #存储总大小
+proxy.node.cache.bytes_total_mb          #存储大小mb
+proxy.node.cache.bytes_free              #空闲存储
+proxy.node.cache.bytes_free_mb           #空闲存储mb
+proxy.node.cache.percent_free_int_pct
+proxy.node.cache_total_hits              #总命中次数
+proxy.node.cache_total_misses            #总的MISS 次数
+
+proxy.process.cache.read_per_sec         #每秒/读
+proxy.process.cache.write_per_sec        #每秒/写
+proxy.process.cache.KB_read_per_sec      #读KB/秒
+proxy.process.cache.KB_write_per_sec     #写KB/秒
+
+
+proxy.process.http.cache_hit_fresh                #新元素hit 计数器
+proxy.process.http.cache_hit_revalidated          #跟源站检验新旧资源 计数器
+proxy.process.http.cache_hit_ims                  #TCP_IMS_HIT 计数器                       
+proxy.process.http.cache_hit_stale_served         #
+proxy.process.http.cache_miss_cold
+proxy.process.http.cache_miss_changed
+proxy.process.http.cache_miss_client_no_cache
+proxy.process.http.cache_miss_client_not_cacheable
+proxy.process.http.cache_miss_ims
+proxy.process.http.cache_read_error
+
+proxy.node.http.cache_hit_fresh_avg_10s          #前10s 内存新鲜对象，命中个数
+proxy.node.http.cache_hit_revalidated_avg_10s    #前10s 内存过期需要重新验证的对象个数
+proxy.node.http.cache_hit_ims_avg_10s
+proxy.node.http.cache_hit_stale_served_avg_10s
+proxy.node.http.cache_miss_cold_avg_10s          #前10s MISS 的冷对象个数
+proxy.node.http.cache_miss_changed_avg_10s
+proxy.node.http.cache_miss_not_cacheable_avg_10s
+proxy.node.http.cache_miss_client_no_cache_avg_10s
+proxy.node.http.cache_miss_ims_avg_10s
+proxy.node.http.cache_read_error_avg_10s
+
+
+proxy.node.http.user_agent_xacts_per_second
+proxy.node.http.user_agent_current_connections_count
+proxy.node.http.user_agent_total_request_bytes
+proxy.node.http.user_agent_total_response_bytes
+proxy.node.http.user_agents_total_transactions_count
+proxy.node.http.user_agents_total_documents_served
+
+proxy.node.http.origin_server_current_connections_count  #当前后端的连接数
+proxy.node.http.origin_server_total_request_bytes
+proxy.node.http.origin_server_total_response_bytes
+proxy.node.http.parent_proxy_total_request_bytes
+proxy.node.http.parent_proxy_total_response_bytes
+proxy.node.http.origin_server_total_transactions_count   #总共
+proxy.node.http.cache_current_connections_count          #ats 当前的连接数
+proxy.node.http.current_parent_proxy_connections         #0
+ 
+proxy.node.current_cache_connections       
+ 
+proxy.node.dns.lookups_per_second                  #不兼容
+proxy.node.dns.lookup_avg_time                     #4.1不兼容
+proxy.node.dns.total_dns_lookups                   #dns总数
+
+proxy.node.hostdb.total_lookups
+proxy.node.hostdb.total_hits
+
+proxy.node.client_throughput_out                   #？？？官方文档是前端 带宽Mb/s 待验证
+proxy.node.current_client_connections              #当前客户端连接数
+proxy.node.current_server_connections              #当前服务端（后端）连接数
+proxy.node.user_agent_total_bytes
+proxy.node.origin_server_total_bytes
+proxy.node.user_agent_total_bytes_avg_10s
+proxy.node.origin_server_total_bytes_avg_10s
+
+proxy.process.cache.ram.read.success               #内存被成功访问次数
+proxy.process.cache.ram_cache.hits                 #内存命中次数
+proxy.process.cache.interim.read.success           #SSD被成功访问次数
+proxy.process.cache.read.success                   #总共read-success次数
+proxy.process.cache.ram_cache.bytes_used           #内存使用
+proxy.process.cache.bytes_total                    #存储总大小
+proxy.process.cache.bytes_used                     #当前已经使用
+
+
+proxy.process.net.read_bytes                       #ats流量流入   =Net (bits待测试
+proxy.process.net.write_bytes                      #ats流量流出   =Net (bits待测试
+                                                                          
+ 
+ 
+proxy.process.socks.connections_successful         #暂不了解
+proxy.process.socks.connections_unsuccessful       #暂不了解
+
+
+
+proxy.process.http.completed_requests               #总完成请求  http 计数器
+proxy.process.http.total_incoming_connections       #总进入连接数
+proxy.process.http.total_client_connections        #总接入连接数   计数器
+proxy.process.http.total_client_connections_ipv4    #计数器  接入ipv4
+proxy.process.http.total_client_connections_ipv6    #计数器   接入ipv6
+proxy.process.http.total_server_connections         #计数器 
+proxy.process.http.total_parent_proxy_connections   #计数器
+
+proxy.process.http.client_connection_time                      #0
+proxy.process.http.parent_proxy_connection_time                #0
+proxy.process.http.server_connection_time                      #0
+proxy.process.http.cache_connection_time                       #0
+
+proxy.process.http.incoming_requests             #输入请求总数     计数器
+proxy.process.http.outgoing_requests             #输出请求总数     计数器
+proxy.process.http.incoming_responses            #请求连接数       计数器
+proxy.process.http.invalid_client_requests       #无效客户端请求？ 计数器
+proxy.process.http.missing_host_hdr
+proxy.process.http.get_requests                       #get请求 计数器
+proxy.process.http.head_requests                      #head请求 计数器
+proxy.process.http.trace_requests                     #trace请求 计数器
+proxy.process.http.options_requests
+proxy.process.http.post_requests                      #post请求 计数器
+proxy.process.http.put_requests                       #put请求 计数器
+proxy.process.http.push_requests                      #push请求 计数器
+proxy.process.http.delete_requests                    #删除请求 计数器
+proxy.process.http.purge_requests                     #推送请求 计数器
+proxy.process.http.connect_requests                   #http请求 计数器
+proxy.process.http.extension_method_requests
+proxy.process.http.client_no_cache_requests           #http_no_chache计数器
+proxy.process.http.broken_server_connections
+proxy.process.http.cache_lookups                    #当前计数器 减法求当前
+proxy.process.http.cache_writes                     #当前计数器 减法求当前
+proxy.process.http.cache_updates                    #当前计数器 减法求当前
+proxy.process.http.cache_deletes                    #当前计数器 减法求当前
+
+proxy.process.http.cache_write_errors              #缓存写错误
+proxy.process.http.cache_read_errors               #缓存读错误
+proxy.process.http.100_responses                   #计数器  如下
+proxy.process.http.101_responses
+proxy.process.http.1xx_responses
+proxy.process.http.200_responses            
+proxy.process.http.201_responses
+proxy.process.http.202_responses
+proxy.process.http.203_responses
+proxy.process.http.204_responses
+proxy.process.http.205_responses
+proxy.process.http.206_responses
+proxy.process.http.2xx_responses
+proxy.process.http.300_responses
+proxy.process.http.301_responses
+proxy.process.http.302_responses
+proxy.process.http.303_responses
+proxy.process.http.304_responses
+proxy.process.http.305_responses
+proxy.process.http.307_responses
+proxy.process.http.3xx_responses
+proxy.process.http.400_responses
+proxy.process.http.401_responses
+proxy.process.http.402_responses
+proxy.process.http.403_responses
+proxy.process.http.404_responses
+proxy.process.http.405_responses
+proxy.process.http.406_responses
+proxy.process.http.407_responses
+proxy.process.http.408_responses
+proxy.process.http.409_responses
+proxy.process.http.410_responses
+proxy.process.http.411_responses
+proxy.process.http.412_responses
+proxy.process.http.413_responses
+proxy.process.http.414_responses
+proxy.process.http.415_responses
+proxy.process.http.416_responses
+proxy.process.http.4xx_responses
+proxy.process.http.500_responses
+proxy.process.http.501_responses
+proxy.process.http.502_responses
+proxy.process.http.503_responses
+proxy.process.http.504_responses
+proxy.process.http.505_responses
+proxy.process.http.5xx_responses
+ 
+ 
+ 
+proxy.process.cache.interim_bytes_used          #SSd缓存空间使用=Interim Used
+proxy.process.cache.interim_bytes_total         #SSd缓存空间=Interim Total
+proxy.process.cache.bytes_used                  #硬盘缓存空间使用= Disk Used
+proxy.process.cache.bytes_total                 #硬盘缓存空间总大小 = Disk Total
+proxy.process.cache.ram_cache.bytes_used        #内存空间使用 = Ram Used 
+proxy.process.cache.ram_cache.total_bytes       #内存总大小
+
+proxy.process.cache.ram_cache.hits              #内存命中计数器
+proxy.process.cache.pread_count                    
+proxy.process.cache.percent_full
+
+proxy.process.cache.lookup.active               #0
+proxy.process.cache.lookup.success              #0
+proxy.process.cache.lookup.failure              #0
+ 
+proxy.process.cache.read.active                 #当前活跃读 计数器
+proxy.process.cache.read.success                #缓存读成功 计数器
+proxy.process.cache.read.failure                #缓存读失败 计数器
+proxy.process.cache.write.active                #当前活跃写 计数器
+proxy.process.cache.write.success               #缓存写成功 计数器
+proxy.process.cache.write.failure               #缓存写失败 计数器
+
+proxy.process.cache.write.backlog.failure
+proxy.process.cache.update.active               #当前更新活跃 计数器
+proxy.process.cache.update.success              #当前更新成功 计数器
+proxy.process.cache.update.failure              #当前更新失败 计数器
+
+proxy.process.cache.remove.active               #当前移除活跃 计数器
+proxy.process.cache.remove.success              #移除成功     计数器
+proxy.process.cache.remove.failure              #移除失败     计数器
+
+proxy.process.cache.evacuate.active             #当前过期缓存排除 计数器
+proxy.process.cache.evacuate.success            #过期缓存排除成功 计数器
+proxy.process.cache.evacuate.failure            #过期缓存排除失败 计数器
+
+proxy.process.cache.read_busy.success  
+proxy.process.cache.read_busy.failure
+
+proxy.process.dns.success_avg_time                       #dns平均响应时间(4.1暂不兼容）
+proxy.process.http.background_fill_current_count
+
+proxy.process.http.current_client_connections                       #前端 当前连接数  = curr conn
+proxy.process.http.current_active_client_connections                #前端 当前活跃连接数=Active Con   和current_client_transactions参数一致
+proxy.process.http.current_client_transactions                      #前端 当前事务连接数=Active Con   和current_active_client_connections一致
+proxy.process.http.current_parent_proxy_transactions                #当前父代理 连接数？？ 暂无数据
+proxy.process.http.current_icp_transactions             
+proxy.process.http.current_server_transactions                      #当前server事务？
+proxy.process.http.current_parent_proxy_raw_transactions
+proxy.process.http.current_icp_raw_transactions
+proxy.process.http.current_server_raw_transactions
+proxy.process.http.current_parent_proxy_connections
+proxy.process.http.current_server_connections
+proxy.process.http.current_cache_connections
+
+proxy.process.update.successes
+proxy.process.update.no_actions
+proxy.process.update.fails
+proxy.process.update.unknown_status
+proxy.process.update.state_machines
+ 
+#ats平均响应时间 #Client_throughput_Mbits/sec   #参考文档 http://blog.csdn.net/tao_627/article/details/46658759
+echo "$(./traffic_line -r proxy.process.http.total_transactions_time)"/"$(./traffic_line -r proxy.process.http.incoming_requests)"/10000000|bc    
