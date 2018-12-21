@@ -1,5 +1,5 @@
 ﻿#!/bin/bash
-#清理24h不用的image
+#清理24h不用的image 交互y回车
 (sleep 1
 echo "y"
 sleep 1)|docker image prune -a --filter "until=24h"
