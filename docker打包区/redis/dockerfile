@@ -1,0 +1,13 @@
+FROM redis:4.0-alpine
+WORKDIR /opt
+COPY ./docker-start.sh  /opt
+
+EXPOSE  6379
+ENV MAXMEMORY "1GB"
+ENV MAXMEMORY_POLICY "allkeys-lru"
+ENV APPENDONLY  "no"
+ENV REQUIREPASS  ""
+ENV PROTECTED_MODE "no"
+ENV SAVE ""
+
+CMD ["sh", "./docker-start.sh"]
