@@ -1,0 +1,57 @@
+FROM debian:stretch-20201209-slim
+    #同步时间
+RUN set -x \
+    && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' > /etc/timezone \
+    #换源
+    && sed -i 's#[a-z]\+.debian.org#mirrors.cloud.tencent.com#g' /etc/apt/sources.list \
+    #依赖
+    && apt update \
+    #&& apt install -y make libpcre3 libpcre3-dev openssl libssl-dev libperl-dev zlib1g-dev gcc lsb-release curl --no-install-recommends \
+    && apt install -y make libpcre3 libssl-dev libpcre3-dev libperl-dev zlib1g-dev gcc lsb-release curl --no-install-recommends \
+    #安装openssl-1.0.2u
+    && cd /usr/local/ \
+    && curl -L -k https://www.openssl.org/source/old/1.0.2/openssl-1.0.2l.tar.gz -o openssl.tar.gz \
+    && tar zxf openssl.tar.gz -C /usr/local/ \
+    && cd /usr/local/openssl-1.0.2l \
+    && ./config --prefix=/usr/local/openssl \
+    && make -j$(getconf _NPROCESSORS_ONLN) \
+    && make install \
+    #安装luajit
+    && mkdir -p /etc/nginx/conf.d \
+    && cd /usr/local/ \
+    && curl -L http://luajit.org/download/LuaJIT-2.0.5.tar.gz -o LuaJIT-2.0.5.tar.gz \
+    && tar zxf LuaJIT-2.0.5.tar.gz \
+    && cd LuaJIT-2.0.5 \
+    && make -j$(getconf _NPROCESSORS_ONLN) \
+    && make install \
+    && export LUAJIT_LIB=/usr/local/lib \
+    && export LUAJIT_INC=/usr/local/include/luajit-2.0/ \
+    #安装tengine
+    && cd /usr/local/ \
+    && curl -L "http://tengine.taobao.org/download/tengine-2.2.3.tar.gz" -o tengine.tar.gz \
+    && tar zxf tengine.tar.gz \
+    && cd /usr/local/tengine-2.2.3 \ 
+    && sed -i "s|.openssl/include|include|g" /usr/local/tengine-2.2.3/auto/lib/openssl/conf \
+    && sed -i "s|.openssl/lib|lib|g" /usr/local/tengine-2.2.3/auto/lib/openssl/conf \
+    #&& cat /usr/local/tengine-2.2.3/auto/lib/openssl/conf
+    #RUN set -ex \
+    #&& ./configure  --prefix=/usr/local/nginx --with-pcre --with-http_ssl_module --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_lua_module --with-ld-opt=-Wl,-rpath,/usr/local/lib \
+    && cd /usr/local/tengine-2.2.3 \ 
+    && ./configure --prefix=/usr/local/nginx --with-pcre --with-http_ssl_module --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_upstream_consistent_hash_module --with-http_upstream_check_module --with-http_lua_module --with-ld-opt=-Wl,-rpath,/usr/local/lib --with-openssl=/usr/local/openssl --with-ipv6 --with-http_v2_module \
+    #&& ./configure  --prefix=/usr/local/nginx --with-pcre --with-http_ssl_module --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_upstream_consistent_hash_module --with-http_upstream_check_module --with-ld-opt=-Wl,-rpath,/usr/local/lib --with-openssl=/usr/local/openssl --with-ipv6 --with-http_v2_module --add-module=modules/ngx_http_lua_module \
+    && make -j$(getconf _NPROCESSORS_ONLN) \
+    && make install \
+    #卸载和删除不必要
+    && apt remove -y --purge curl lsb-release \
+    && apt autoremove -y \
+    && rm -rf /var/lib/apt/lists/* /var/cache/* /usr/local/LuaJIT-2.0.5 /usr/local/LuaJIT-2.0.5.tar.gz /usr/local/openssl.tar.gz /usr/local/openssl-1.0.2l
+
+ENV PATH=$PATH:/usr/local/nginx/sbin/
+
+##########配置文件和测试包###########
+COPY nginx.conf /usr/local/nginx/conf/nginx.conf
+COPY server* /etc/nginx/conf.d/
+COPY *.lua /usr/local/nginx/conf/
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+STOPSIGNAL SIGTERM
