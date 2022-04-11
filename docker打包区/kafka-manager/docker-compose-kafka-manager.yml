@@ -1,0 +1,26 @@
+version: '3.6'
+services:
+  kafka-manager:
+    image: hlebalbau/kafka-manager:3.0.0.5
+    container_name: kafka-manager
+    hostname: kafka-manager
+    privileged: true
+    network_mode: host
+    ports:
+      - "80"
+    environment:
+      - KAFKA_MANAGER_AUTH_ENABLED=true
+      - KAFKA_MANAGER_USERNAME=admin
+      - KAFKA_MANAGER_PASSWORD=passwd
+      - TZ=Asia/Shanghai
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    command:
+      - "/kafka-manager/bin/cmak"
+      - "-Dpidfile.path=/dev/null"
+      - "-Dapplication.home=/kafka-manager"
+      - "-Dhttp.port=80"
+      - "-Dcmak.zkhosts=zk1:2181,zk2:2181,zk3:2181"
+    healthcheck:
+      test: curl -f http://127.0.0.1:80/api/health || exit 1
+    restart: unless-stopped
