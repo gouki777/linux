@@ -1,0 +1,45 @@
+version: "3"
+#s三台主机 分别部署   自行修改extra_hosts {zk1,2,3对应IP}
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.7.0-debian-10-r225
+    container_name: zk
+    network_mode: host
+    ports:
+      - '2181'
+      - '2888'
+      - '3888'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    extra_hosts:
+      - "zk1:192.168.0.101"
+      - "zk2:192.168.0.102"
+      - "zk3:192.168.0.103"
+    volumes:
+      - /data/zookeep-kafka/zookeepdata:/bitnami/zookeeper
+	  - /etc/localtime:/etc/localtime:ro
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVER_ID=1
+      - ZOO_SERVERS=zk1:2888:3888::1,zk2:2888:3888::2,zk3:2888:3888::3
+  kafka:
+    image: docker.io/bitnami/kafka:3.2
+    container_name: kafka
+    network_mode: host
+    ports:
+      - "9092"
+    environment:
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://192.168.0.101:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zk1:2181,zk2:2181,zk3:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    extra_hosts:
+      - "zk1:192.168.0.101"
+      - "zk2:192.168.0.102"
+      - "zk3:192.168.0.103"
+    volumes:
+      - /data/zookeep-kafka/kafkadata:/bitnami/kafka
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - zookeeper
